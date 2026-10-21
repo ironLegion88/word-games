@@ -1,0 +1,11 @@
+[package]
+name = "trie-cli"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ashoka University CS"]
+description = "Interactive command-line interface for the word trie dictionary"
+
+[dependencies]
+trie = { path = "../trie" }
+
+[dev-dependencies]

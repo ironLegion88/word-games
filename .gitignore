@@ -1,0 +1,12 @@
+# Rust build output
+/target/
+
+# Temporary and editor files
+*.rs.bk
+*.pdb
+*.orig
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store

@@ -1,0 +1,10 @@
+[package]
+name = "trie"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ashoka University CS"]
+description = "A high-performance memory-resident word trie with safe arena allocation and pruning"
+
+[dependencies]
+
+[dev-dependencies]

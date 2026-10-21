@@ -1,0 +1,4 @@
+# Prevent git from modifying line endings in fixture files
+assets/dictionary.txt -text
+*.pdf binary
+* text=auto eol=lf

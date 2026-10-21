@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "trie",
+    "trie-cli",
+]
+resolver = "2"
