@@ -26,10 +26,15 @@ fn letter_a_through_z() {
 
 #[test]
 fn letter_invalid_ascii() {
-    let invalid_chars = [' ', '\t', '\n', '\r', '0', '9', '-', '\'', '.', ',', ';', '!', '@', '_'];
+    let invalid_chars = [
+        ' ', '\t', '\n', '\r', '0', '9', '-', '\'', '.', ',', ';', '!', '@', '_',
+    ];
     for &c in &invalid_chars {
         assert!(Letter::from_char(c).is_none(), "expected None for '{c}'");
-        assert!(Letter::from_ascii_byte(c as u8).is_none(), "expected None for byte b'{c}'");
+        assert!(
+            Letter::from_ascii_byte(c as u8).is_none(),
+            "expected None for byte b'{c}'"
+        );
     }
 }
 
@@ -37,7 +42,10 @@ fn letter_invalid_ascii() {
 fn letter_unicode() {
     let unicode_chars = ['é', 'ñ', 'ü', 'ß', 'α', 'Ω', '中', '🦀'];
     for &c in &unicode_chars {
-        assert!(Letter::from_char(c).is_none(), "expected None for unicode '{c}'");
+        assert!(
+            Letter::from_char(c).is_none(),
+            "expected None for unicode '{c}'"
+        );
     }
 }
 
@@ -100,7 +108,10 @@ fn table_driven_malformed_tokens_rejected() {
     for (input, expected_char, expected_pos) in cases {
         let err = normalize_word(input).expect_err(&format!("expected error for '{input}'"));
         match err {
-            WordError::InvalidCharacter { character, position } => {
+            WordError::InvalidCharacter {
+                character,
+                position,
+            } => {
                 assert_eq!(character, expected_char, "mismatched char for '{input}'");
                 assert_eq!(position, expected_pos, "mismatched pos for '{input}'");
             }

@@ -111,7 +111,9 @@ pub fn normalize_word(word: &str) -> Result<Cow<'_, str>, WordError> {
 /// Validates that a string is a valid word and returns an iterator over its `Letter` values.
 ///
 /// Returns `Err(WordError)` if the string is empty or contains non-ASCII-alphabetic characters.
-pub fn validate_and_parse_letters(word: &str) -> Result<impl Iterator<Item = Letter> + '_, WordError> {
+pub fn validate_and_parse_letters(
+    word: &str,
+) -> Result<impl Iterator<Item = Letter> + '_, WordError> {
     if word.is_empty() {
         return Err(WordError::EmptyWord);
     }
@@ -126,13 +128,18 @@ pub fn validate_and_parse_letters(word: &str) -> Result<impl Iterator<Item = Let
         }
     }
 
-    Ok(word.as_bytes().iter().map(|&b| Letter::from_ascii_byte(b).expect("validated")))
+    Ok(word
+        .as_bytes()
+        .iter()
+        .map(|&b| Letter::from_ascii_byte(b).expect("validated")))
 }
 
 /// Validates a prefix string (which is permitted to be empty) and returns an iterator of `Letter` values.
 ///
 /// Returns `Err(WordError)` if any character is not an ASCII alphabetic character.
-pub fn validate_and_parse_prefix(prefix: &str) -> Result<impl Iterator<Item = Letter> + '_, WordError> {
+pub fn validate_and_parse_prefix(
+    prefix: &str,
+) -> Result<impl Iterator<Item = Letter> + '_, WordError> {
     for (i, &b) in prefix.as_bytes().iter().enumerate() {
         if Letter::from_ascii_byte(b).is_none() {
             let ch = prefix[i..].chars().next().unwrap_or(b as char);
@@ -143,5 +150,8 @@ pub fn validate_and_parse_prefix(prefix: &str) -> Result<impl Iterator<Item = Le
         }
     }
 
-    Ok(prefix.as_bytes().iter().map(|&b| Letter::from_ascii_byte(b).expect("validated")))
+    Ok(prefix
+        .as_bytes()
+        .iter()
+        .map(|&b| Letter::from_ascii_byte(b).expect("validated")))
 }
