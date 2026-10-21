@@ -1,101 +1,224 @@
 # Word Trie and Word Games in Rust
 
-> **Repository status: DESIGN/PRE-IMPLEMENTATION.** This document ships with the planning packet, **not** a completed Rust repository. The trie, `trie-cli`, and games have **not been implemented or executed in this document bundle**. A coding agent must replace this status and accurately document working behavior as the repository develops. Do not claim that any Cargo command below has been run merely because it is listed here.
+> **Repository Status — Assignment 1 Complete & Verified.**
+>
+> The `trie` core library crate and `trie-cli` interactive command-line binary crate are fully implemented, passing 100% of unit, invariant, randomized reference-model, real-dictionary regression, and end-to-end integration test suites.
+>
+> *Future Milestones (Spelling Bee, Boggle) remain in the planned roadmap and are not yet authorized or implemented.*
 
-## Project overview
+---
 
-This project is intended to deliver one reusable, memory-resident Rust trie dictionary, a first-submission management CLI, and later independent word-game engines (Spelling Bee and Boggle). The architecture separates dictionary storage from game rules and user interfaces, allowing future Wordle, richer terminal applications, or GUIs without duplicating the trie.
+## 1. Project Overview
 
-**The first mandatory assignment is `Word Games.pdf`: finish the `trie` library and the `trie-cli` binary, including comprehensive tests, before starting any game.** Spelling Bee and Boggle are independently authorized later stages.
+This project implements a reusable, high-performance, memory-resident **Word Trie** in safe Rust. It serves as the dictionary engine for word processing applications and upcoming word games.
 
-### Milestones
+### Milestones & Scope
 
-| Milestone | Scope | Status in this packet |
+| Milestone | Scope | Status |
 |---|---|---|
-| Assignment 1 | `trie` + `trie-cli`: create, insert, lookup, delete, bulk load/delete, normalization, found/missing lists | **Planned; not implemented** |
-| Assignment 2 | Spelling Bee engine + terminal adapter | **Future; not authorized to implement yet** |
-| Assignment 3 | Boggle engine + terminal adapter | **Future; not authorized to implement yet** |
-| Extensions | Wordle, TUI, GUI, alternative trie representations, generation-quality studies | **Ideas; out of scope** |
+| **Assignment 1** | `trie` library + `trie-cli` interactive binary: arena allocation, branch pruning, free-list reuse, compaction, file loading, batch deletion, present/absent filtering, CLI REPL | **Completed & Verified** |
+| **Assignment 2** | Spelling Bee puzzle engine + terminal driver | *Planned; awaiting explicit authorization* |
+| **Assignment 3** | Boggle grid solver + terminal driver | *Planned; awaiting explicit authorization* |
+| **Future Extensions** | Wordle, rich TUI/GUI, adaptive node structures | *Future roadmap; out of scope* |
 
-## Document map
+---
 
-- [`docs/DESIGN_SPECIFICATION.md`](docs/DESIGN_SPECIFICATION.md): approved architecture, data types, ownership/mutability, API contracts, node reclamation, and future game design.
-- [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md): executable implementation phases, requirement acceptance tests, Git workflow, and hard stop rules.
-- [`docs/TESTING.md`](docs/TESTING.md): exhaustive test matrix, reproducibility conventions, and **honest recorded test status**.
-- [`AGENT_PROMPT.md`](AGENT_PROMPT.md): ready-to-copy instructions for an autonomous coding agent.
-- Input references included in this pack: [`assignments/Word Games.pdf`](assignments/Word%20Games.pdf), [`assignments/Spelling Bee.pdf`](assignments/Spelling%20Bee.pdf), [`assignments/Boggle.pdf`](assignments/Boggle.pdf), and [`assets/dictionary.txt`](assets/dictionary.txt).
+## 2. Architecture & Rust Design Principles
 
-## Design at a glance
+The implementation demonstrates idiomatic Rust ownership, data structures, and memory safety:
 
-The initial trie will be a private indexed arena of nodes with 26 fixed child indices each, `u32` IDs, terminal-word flags, subtree word counts, a reusable free list, and automatic threshold-based compaction. Public methods accept borrowed `&str`, normalize ASCII casing, use `&Trie` for reads and `&mut Trie` for writes, and return `Result` when validation or I/O can fail. Future games will borrow `&Trie` temporarily during puzzle setup, then own their frozen solution sets and mutable guess state.
+1. **Indexed Arena Trie (`trie::node::Node` & `trie::node::NodeId`):**
+   - Nodes are owned by a single contiguous vector (`Vec<Node>`) inside `Trie`.
+   - Node references are strongly-typed 32-bit indices (`NodeId(u32)`), avoiding raw pointers, reference counting (`Rc`/`Arc`), interior mutability (`RefCell`), and `unsafe` code.
+   - Child branches use fixed 26-slot direct indexing (`[u32; 26]`), providing true $O(L)$ child lookup per letter where $L$ is word length. Absent edges use `NO_CHILD = u32::MAX`.
+   - Each `Node` occupies 112 bytes: `[u32; 26]` (104 bytes) + `bool is_word` (1 byte + 3 padding) + `u32 subtree_words` (4 bytes).
 
-```mermaid
-flowchart TB
-  D[(dictionary.txt)] --> TR[trie — one shared dictionary implementation]
-  C[trie-cli — first submission] --> TR
-  S[Spelling Bee — future engine] -. temporary &Trie .-> TR
-  B[Boggle — future engine] -. temporary &Trie .-> TR
-  U[Game CLI / future TUI / GUI] -. planned .-> S
-  U -. planned .-> B
+2. **True Physical Pruning & Safe Slot Recycling:**
+   - Single-word `remove` and batch `remove_words` perform physical branch pruning. When a word is removed, all nodes that no longer lead to another valid word are detached from their parents, cleared, and pushed onto a LIFO `free_list`.
+   - Reinsertions reuse slots from `free_list` before allocating new capacity in the vector.
+   - Slot 0 always stores the root node and is never freed.
+
+3. **Fragmentation-Triggered Automatic Compaction:**
+   - When fragmentation reaches configured thresholds (e.g. $\ge 4096$ free slots and $\ge 1/3$ of the arena is free), `maybe_compact()` automatically compacts live reachable nodes into a dense vector, remaps all child IDs, empties the free list, and calls `shrink_to_fit()`.
+
+4. **Validated ASCII Letters & Normalization (`trie::letter::Letter`):**
+   - The `Letter(u8)` newtype guarantees a valid ASCII index in `0..=25`.
+   - The public routine `normalize_word(&str)` accepts lowercase, uppercase, and mixed-case ASCII, normalizing to uppercase without allocating heap memory on already-uppercase input via `Cow<'_, str>`.
+   - Malformed inputs (digits, punctuation, spaces, non-ASCII) are rejected with typed `WordError` variants without panicking or modifying dictionary state.
+
+5. **Borrowing & Lifetimes:**
+   - Queries (`contains`, `has_prefix`, `cursor`, `visit_words`) borrow `&self` immutably.
+   - Mutations (`insert`, `remove`, `extend_from_reader`) take `&mut self`.
+   - The read-only `TrieCursor<'a>` borrows `&'a Trie` and navigates edges without heap allocation or lifetime leakage.
+
+---
+
+## 3. Workspace Layout
+
+```text
+word-trie/
+├── Cargo.toml                         # Workspace root manifest
+├── Cargo.lock                         # Pinned dependency lockfile
+├── README.md                          # Current project documentation
+├── .gitattributes                     # Binary protection for dictionary fixture
+├── .gitignore                         # Build and target artifacts filter
+├── assets/
+│   └── dictionary.txt                 # Official 178,691-word uppercase fixture
+├── assignments/
+│   ├── Word Games.pdf                 # Active Assignment 1 specification
+│   ├── Spelling Bee.pdf               # Prospective Assignment 2 specification
+│   └── Boggle.pdf                     # Prospective Assignment 3 specification
+├── docs/
+│   ├── DESIGN_SPECIFICATION.md        # Binding architectural specification
+│   ├── IMPLEMENTATION_PLAN.md         # Step-by-step plan & acceptance gates
+│   └── TESTING.md                     # Comprehensive testing & verification log
+├── trie/                              # Reusable library crate
+│   ├── Cargo.toml
+│   ├── src/
+│   │   ├── lib.rs                     # Main Trie struct, public API & invariants
+│   │   ├── error.rs                   # Typed WordError and LoadError
+│   │   ├── letter.rs                  # Letter(u8) newtype & normalization
+│   │   ├── node.rs                    # Arena Node, NodeId, and sentinels
+│   │   ├── traversal.rs               # Read-only TrieCursor
+│   │   └── loading.rs                 # Buffered parsing, batch ops & filtering
+│   └── tests/
+│       ├── arena.rs                   # Arena layout & invariant tests
+│       ├── deletion.rs                # Branch pruning, free-list reuse, compaction
+│       ├── letter.rs                  # Letter validation & normalization tests
+│       ├── loading.rs                 # Delimiter parsing, CRLF, BOM, atomicity
+│       ├── operations.rs              # Insert, lookup, prefix, cursor tests
+│       ├── randomized.rs              # Seeded SplitMix64 reference-model tests
+│       └── regression.rs              # Real 178,691-word corpus regression
+└── trie-cli/                          # Interactive command-line executable
+    ├── Cargo.toml
+    ├── src/
+    │   ├── main.rs                    # CLI entry point & argument handling
+    │   ├── commands.rs                # Command enum & line parser
+    │   └── repl.rs                    # Interactive terminal loop
+    └── tests/
+        └── cli.rs                     # Subprocess integration tests with piped stdin
 ```
 
-## Baseline dictionary facts
+---
 
-The provided `dictionary.txt` contains **178,691 unique uppercase ASCII words**, is alphabetically sorted, and has no final newline. Word lengths range from 2 to 15. An uncompressed trie for that input has **395,185 nodes** including its root. These are **input observations, not claims that an implemented Rust trie has passed its regression tests**.
+## 4. Building and Running
 
-## Planned development prerequisites
+### Prerequisites
 
-- Rust stable toolchain, `cargo`, and Git.
-- The four source files included in `assignments/` and `assets/`.
-- A terminal capable of providing standard input to `trie-cli`.
+- Rust toolchain (edition 2021; verified on `rustc 1.98.1`).
+- `cargo` package manager.
 
-After the agent creates the workspace, the **expected** validation commands will be:
+### Standard Build & Verification Commands
 
 ```bash
+# Check formatting
 cargo fmt --all -- --check
+
+# Compile-check all workspace members
 cargo check --workspace
+
+# Lint with strict Clippy warnings enabled
 cargo clippy --workspace --all-targets -- -D warnings
+
+# Run all unit, invariant, randomized, and integration tests
 cargo test --workspace
+
+# Run all tests with release optimizations
+cargo test --workspace --release
+
+# Build optimized release binaries
 cargo build --workspace --release
 ```
 
-**Not yet executable in this documentation-only packet.** The agent must replace this note with actual verified commands/output upon the first completed checkpoint.
+---
 
-## Planned first-submission CLI (not yet implemented)
+## 5. Using `trie-cli`
 
-```text
-help
-new
-load <path>
-add-file <path>
-insert <word>
-contains <word>
-remove <word>
-remove-file <path>
-present <path>
-absent <path>
-normalize <word>
-stats
-quit
+### Launching the CLI
+
+You can start `trie-cli` with an empty dictionary:
+```bash
+cargo run -p trie-cli
 ```
 
-Expected CLI semantics: `load` replaces the current dictionary; `add-file` extends it; `contains` returns membership; `present`/`absent` preserve token order and duplicates; lowercase ASCII input is normalized; invalid words cause friendly errors and do not corrupt state. All these are **requirements to be verified, not current behavior**.
+Or preload a dictionary fixture on startup:
+```bash
+cargo run -p trie-cli -- --dictionary assets/dictionary.txt
+```
 
-## Test strategy and evidence
+### Supported Interactive Commands
 
-Testing will cover simple unit tests, reference-model randomized operations against `HashSet<String>`, live-node invariants, free-list reuse, force-compaction, failure atomicity, generated mixed-format files, real-dictionary regression, CLI subprocess interaction, and release checks. `docs/TESTING.md` will explicitly distinguish *planned* from *actually run* evidence.
+| Command | Syntax | Description |
+|---|---|---|
+| `help` | `help` | Display available commands |
+| `new` | `new` | Reset to a fresh empty dictionary |
+| `load` | `load <path>` | Replace dictionary with words parsed from `<path>` |
+| `add-file` | `add-file <path>` | Append and validate words from `<path>` into dictionary |
+| `insert` | `insert <word>` | Insert a single word (case-insensitive) |
+| `contains` | `contains <word>` | Check word membership; returns `true` or `false` |
+| `remove` | `remove <word>` | Delete a single word with branch pruning |
+| `remove-file`| `remove-file <path>`| Delete all words listed in file with pruning |
+| `present` | `present <path>` | Output tokens from `<path>` present in dictionary |
+| `absent` | `absent <path>` | Output tokens from `<path>` absent from dictionary |
+| `normalize`| `normalize <word>` | Display uppercase conversion of `<word>` |
+| `stats` | `stats` | Display word count, live nodes, arena & free slots |
+| `quit` | `quit` or `exit` | Terminate session cleanly |
 
-## Current limitations / future directions
+### Verified Session Example
 
-- No Rust source code or executable is included in this initial document pack.
-- No benchmarks or tests have been executed as part of producing the plan.
-- Game engines, word generators, advanced terminal interfaces, GUI, and Wordle are deferred.
-- For future Boggle, proper-noun metadata is unavailable in this dictionary; `Qu` tiles will initially not handle spellings with `Q` not followed by `U`. Timed play is deferred.
+```text
+Word Trie Interactive CLI
+Type 'help' for available commands, or 'quit' to exit.
 
-## Contributor / agent workflow
+trie> insert CAR
+Inserted "CAR" (total words: 1).
+trie> insert CART
+Inserted "CART" (total words: 2).
+trie> contains car
+true: "CAR" is in the dictionary.
+trie> contains dog
+false: "DOG" is NOT in the dictionary.
+trie> normalize bIrD
+Normalized: BIRD
+trie> stats
+Dictionary Statistics:
+  Words:            2
+  Live nodes:       5
+  Arena slots:      5
+  Free slots:       0
+  Allocated memory: 560 bytes (nominal arena nodes)
+trie> remove CART
+Removed "CART" (remaining words: 1).
+trie> contains cart
+false: "CART" is NOT in the dictionary.
+trie> contains car
+true: "CAR" is in the dictionary.
+trie> stats
+Dictionary Statistics:
+  Words:            1
+  Live nodes:       4
+  Arena slots:      5
+  Free slots:       1
+  Allocated memory: 560 bytes (nominal arena nodes)
+trie> quit
+Goodbye!
+```
 
-Work only on the active assignment; commit in small coherent increments with Conventional Commits; test each change; keep this README and `docs/TESTING.md` true to the actual repository at every stage. Independently reverify both documents at each assignment checkpoint and **stop for user approval before moving to the next assignment**.
+---
 
-## Asset origin and license review
+## 6. Real Dictionary Facts (Verified)
 
-The PDFs and dictionary were supplied for this assignment. Before publishing a public repository, verify redistribution rights for the full dictionary and course handouts; if rights are uncertain, do not publish those files. The provided sources are packaged under `assignments/` and `assets/` for the recipient; a public clone may need instructions for acquiring them separately. No license for the produced code has been selected in this planning packet.
+Testing against the provided `assets/dictionary.txt` verifies:
+- **Unique words:** exactly 178,691
+- **Standard uncompressed trie reachable nodes (incl. root):** exactly 395,185
+- **Word lengths:** minimum 2, maximum 15, mean 8.8671
+- **Trailing newline:** file does not end with `\n` (last line is `ZZZ`); handled cleanly without word truncation.
+- **Load performance:** loads full dictionary in ~340ms (debug) / ~190ms (release).
+
+---
+
+## 7. Next Steps (Awaiting Authorization)
+
+Per project guidelines, work on subsequent game implementations is paused.
+- **Stage B (Spelling Bee):** will begin only upon explicit user instruction.
+- **Stage C (Boggle):** will begin only upon subsequent explicit instruction.

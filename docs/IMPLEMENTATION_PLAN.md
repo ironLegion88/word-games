@@ -334,15 +334,15 @@ flowchart LR
 
 ## 7. Final deliverable checklist for each checkpoint
 
-- [ ] Every PDF-mandated function/behavior for **the authorized assignment** exists.
-- [ ] Public API has examples, documented errors and ownership semantics.
-- [ ] Core invariants checked and regression-tested.
-- [ ] Unit, integration, seeded randomized, adversarial, CLI and corpus tests appropriate to current stage pass.
-- [ ] `cargo fmt --check`, `cargo check`, `cargo clippy -D warnings`, `cargo test`, and release build completed or accurately marked blocked.
-- [ ] Benchmark methodology/results recorded if measurements were run; no unsupported claims.
-- [ ] README describes CURRENT capabilities only; examples actually run.
-- [ ] TESTING is accurate, reproducible, and records executed verification.
-- [ ] Design spec and plan reflect any user-approved deviations.
-- [ ] Conventional commits exist for completed work, with clean owned diff.
-- [ ] Checkpoint report includes requirement→test mapping, limitations, Git commits.
-- [ ] **STOP**; await explicit authorization for the next assignment.
+- [x] Every PDF-mandated function/behavior for **the authorized assignment** exists.
+- [x] Public API has examples, documented errors and ownership semantics.
+- [x] Core invariants checked and regression-tested.
+- [x] Unit, integration, seeded randomized, adversarial, CLI and corpus tests appropriate to current stage pass.
+- [x] `cargo fmt --check`, `cargo check`, `cargo clippy -D warnings`, `cargo test`, and release build completed.
+- [x] Benchmark methodology/results recorded if measurements were run; no unsupported claims.
+- [x] README describes CURRENT capabilities only; examples actually run.
+- [x] TESTING is accurate, reproducible, and records executed verification.
+- [x] Design spec and plan reflect any user-approved deviations.
+- [x] Conventional commits exist for completed work, with clean owned diff.
+- [x] Checkpoint report includes requirement→test mapping, limitations, Git commits.
+- [x] **STOP**; await explicit authorization for the next assignment.

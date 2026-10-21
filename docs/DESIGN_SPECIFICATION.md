@@ -1,8 +1,8 @@
 # Word Trie and Word Games — Architecture & Design Specification
 
-**Status:** Approved design for implementation; no code is asserted to exist.  
-**First required release checkpoint:** Assignment 1, **Word Games** (`trie` + `trie-cli`) only.  
-**Planned subsequent checkpoints:** Assignment 2, Spelling Bee; Assignment 3, Boggle. Wordle, sophisticated TUIs and GUIs are future extensions, not assigned work.  
+**Status:** Approved design; Assignment 1 (`trie` + `trie-cli`) fully implemented and verified.<br>
+**First required release checkpoint:** Assignment 1, **Word Games** (`trie` + `trie-cli`) only — **COMPLETED**.<br>
+**Planned subsequent checkpoints:** Assignment 2, Spelling Bee; Assignment 3, Boggle. Wordle, sophisticated TUIs and GUIs are future extensions, not assigned work.
 **Authority:** The three supplied PDFs (`Word Games.pdf`, `Spelling Bee.pdf`, `Boggle.pdf`), the supplied `dictionary.txt`, and the user's recorded design decisions. Where this document goes beyond the PDFs, it is explicitly a project design decision.
 
 ## 1. Goals, scope, and delivery boundaries
