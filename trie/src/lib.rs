@@ -41,6 +41,36 @@ pub struct TrieStats {
 }
 
 /// A high-performance, memory-resident word trie based on an indexed arena.
+///
+/// Nodes are stored contiguously in a private vector arena and indexed by `NodeId`.
+/// Child lookup is direct and O(1) per ASCII letter. Deletions perform true physical
+/// branch pruning, recycling slots to an internal free list for immediate reuse,
+/// and trigger automatic compaction when fragmentation exceeds thresholds.
+///
+/// # Examples
+/// ```
+/// use trie::Trie;
+///
+/// let mut trie = Trie::new();
+/// assert!(trie.is_empty());
+///
+/// // Insert words (automatically normalized to uppercase)
+/// assert!(trie.insert("CAR").unwrap());
+/// assert!(trie.insert("cart").unwrap());
+/// assert!(!trie.insert("CAR").unwrap()); // duplicate returns false
+///
+/// // Membership and prefix queries
+/// assert_eq!(trie.len(), 2);
+/// assert!(trie.contains("CAR"));
+/// assert!(trie.contains("car")); // case-insensitive
+/// assert!(!trie.contains("DOG"));
+/// assert!(trie.has_prefix("CA"));
+///
+/// // Pruning deletion
+/// assert!(trie.remove("cart").unwrap());
+/// assert!(!trie.contains("cart"));
+/// assert!(trie.contains("car")); // prefix branch preserved
+/// ```
 #[derive(Clone, Debug)]
 pub struct Trie {
     /// Contiguous arena storage of nodes. Slot 0 is always the root.
