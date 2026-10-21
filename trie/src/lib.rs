@@ -16,6 +16,13 @@ pub use traversal::TrieCursor;
 
 use node::{Node, NodeId};
 
+/// Minimum number of freed slots required before automatic compaction is considered.
+pub const DEFAULT_COMPACT_MIN_FREES: usize = 4096;
+/// Compaction ratio numerator (e.g. 1 for 1/3 of arena).
+pub const DEFAULT_COMPACT_RATIO_NUM: usize = 1;
+/// Compaction ratio denominator (e.g. 3 for 1/3 of arena).
+pub const DEFAULT_COMPACT_RATIO_DEN: usize = 3;
+
 /// Detailed statistics about the internal arena and contents of the trie.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct TrieStats {
@@ -158,6 +165,144 @@ impl Trie {
         Ok(true)
     }
 
+    /// Removes a word from the trie, performing real branch pruning and free-list recycling.
+    ///
+    /// Accepts lowercase and uppercase ASCII words. If the word is not in the trie, returns `Ok(false)`
+    /// without modifying the trie. If the input is malformed (empty or invalid characters),
+    /// returns `Err(WordError)`.
+    ///
+    /// When a word is removed, any nodes that no longer lead to another valid word are detached,
+    /// their arena slots are cleared and pushed onto the free list for immediate reuse.
+    /// If arena fragmentation reaches the compaction threshold, automatic compaction is triggered.
+    ///
+    /// Returns `Ok(true)` if the word was present and removed, or `Ok(false)` if the word was absent.
+    pub fn remove(&mut self, word: &str) -> Result<bool, WordError> {
+        let changed = self.remove_internal(word, true)?;
+        Ok(changed)
+    }
+
+    /// Internal removal helper allowing compaction to be deferred during bulk batch deletions.
+    pub(crate) fn remove_internal(
+        &mut self,
+        word: &str,
+        allow_compaction: bool,
+    ) -> Result<bool, WordError> {
+        let letters: Vec<Letter> = letter::validate_and_parse_letters(word)?.collect();
+
+        // 1. Walk path and record parent/letter transitions
+        let mut path: Vec<(NodeId, Letter)> = Vec::with_capacity(letters.len());
+        let mut curr = NodeId::ROOT;
+
+        for &letter in &letters {
+            match self.nodes[curr.as_usize()].get_child(letter) {
+                Some(child) => {
+                    path.push((curr, letter));
+                    curr = child;
+                }
+                None => return Ok(false), // Prefix does not exist
+            }
+        }
+
+        // 2. Check if terminal node is actually marked as a word
+        if !self.nodes[curr.as_usize()].is_word {
+            return Ok(false); // Proper prefix exists, but word not present
+        }
+
+        // 3. Clear word flag and decrement word count
+        self.nodes[curr.as_usize()].is_word = false;
+        self.word_count -= 1;
+        self.nodes[curr.as_usize()].subtree_words -= 1;
+
+        // 4. Walk backward along the path toward the root
+        let mut child_id = curr;
+        for (parent_id, letter) in path.into_iter().rev() {
+            self.nodes[parent_id.as_usize()].subtree_words -= 1;
+
+            if self.nodes[child_id.as_usize()].subtree_words == 0 {
+                // Child has no remaining words in its subtree; detach from parent and reclaim
+                self.nodes[parent_id.as_usize()].clear_child(letter);
+                self.free_node(child_id);
+            }
+
+            child_id = parent_id;
+        }
+
+        // 5. Evaluate automatic compaction threshold if enabled
+        if allow_compaction {
+            self.maybe_compact();
+        }
+
+        Ok(true)
+    }
+
+    /// Evaluates fragmentation and compacts the arena if the free list exceeds configured thresholds.
+    pub(crate) fn maybe_compact(&mut self) {
+        if self.should_compact(
+            DEFAULT_COMPACT_MIN_FREES,
+            DEFAULT_COMPACT_RATIO_NUM,
+            DEFAULT_COMPACT_RATIO_DEN,
+        ) {
+            self.compact();
+        }
+    }
+
+    /// Determines if current free list meets given threshold requirements.
+    #[inline]
+    pub(crate) fn should_compact(&self, min_frees: usize, num: usize, den: usize) -> bool {
+        self.free_list.len() >= min_frees && self.free_list.len() * den >= self.nodes.len() * num
+    }
+
+    /// Compacts the arena into a dense array containing only live reachable nodes.
+    ///
+    /// Every live node is assigned a new consecutive slot starting at index 0 (the root).
+    /// All child pointers are remapped, the free list is cleared, and arena capacity is shrunk.
+    pub fn compact(&mut self) {
+        if self.free_list.is_empty() {
+            return;
+        }
+
+        let old_len = self.nodes.len();
+        let mut old_to_new = vec![NO_CHILD; old_len];
+
+        let mut new_nodes = Vec::with_capacity(self.live_node_count);
+        let mut queue = std::collections::VecDeque::new();
+
+        old_to_new[NodeId::ROOT.as_usize()] = 0;
+        queue.push_back(NodeId::ROOT);
+
+        // First pass: assign new consecutive IDs to reachable nodes
+        while let Some(old_id) = queue.pop_front() {
+            let old_node = self.nodes[old_id.as_usize()].clone();
+            new_nodes.push(old_node);
+
+            for &child_raw in &self.nodes[old_id.as_usize()].children {
+                if child_raw != NO_CHILD {
+                    let child_old_idx = child_raw as usize;
+                    if old_to_new[child_old_idx] == NO_CHILD {
+                        let child_new_id = (queue.len() + new_nodes.len()) as u32;
+                        old_to_new[child_old_idx] = child_new_id;
+                        queue.push_back(NodeId(child_raw));
+                    }
+                }
+            }
+        }
+
+        // Second pass: rewrite all child references in new_nodes
+        for node in &mut new_nodes {
+            for child_raw in &mut node.children {
+                if *child_raw != NO_CHILD {
+                    *child_raw = old_to_new[*child_raw as usize];
+                }
+            }
+        }
+
+        new_nodes.shrink_to_fit();
+
+        self.nodes = new_nodes;
+        self.free_list.clear();
+        assert_eq!(self.nodes.len(), self.live_node_count);
+    }
+
     /// Checks if a word is in the trie.
     ///
     /// Accepts lowercase and uppercase ASCII words. If the word is invalid (contains non-ASCII,
@@ -287,7 +432,6 @@ impl Trie {
     /// # Safety Invariant
     /// The caller must ensure that the parent node's edge to this child has already been detached,
     /// and that the node is not reachable from the root. The root node (`NodeId::ROOT`) can never be freed.
-    #[allow(dead_code)]
     pub(crate) fn free_node(&mut self, id: NodeId) {
         assert_ne!(id, NodeId::ROOT, "cannot free the root node");
         assert!(id.as_usize() < self.nodes.len(), "node id out of bounds");
