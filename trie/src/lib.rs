@@ -6,11 +6,13 @@
 
 pub mod error;
 pub mod letter;
+pub mod loading;
 pub mod node;
 pub mod traversal;
 
 pub use error::{LoadError, WordError};
 pub use letter::{normalize_word, Letter, ALPHABET_SIZE};
+pub use loading::{parse_tokens, BatchReport, LoadReport, ParsedToken};
 pub use node::NO_CHILD;
 pub use traversal::TrieCursor;
 
