@@ -1,0 +1,17 @@
+[package]
+name = "wordle"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ashoka University CS"]
+description = "High-performance Wordle engine and feedback algorithms"
+
+[dependencies]
+trie = { path = "../trie" }
+rand = "0.8"
+
+[dev-dependencies]
+
+[[bench]]
+name = "algorithms"
+harness = false
+
