@@ -9,7 +9,7 @@
 | Repository and feature branch | `word-games` at `D:\Ashoka\Monsoon 2026\Programming Lab\Assignment 3\word-games`, branch `feat/boggle` |
 | Base/main commit | `4bcf4e7fa150bf445d8387976dfc8ea979a57965` (merged Spelling Bee) |
 | Reviewed code commit | `94ff06e0e6928a9396280fca71d10c827de165bd` |
-| Remediation commits reviewed | Pending commit (all 3 findings verified resolved in working tree) |
+| Remediation commits reviewed | `e06d217` (remediated FINDING-BG-01, FINDING-BG-02, FINDING-BG-03) |
 | Specs/assignments and requirement IDs | `assignments/Boggle.pdf`, `docs/DESIGN_SPECIFICATION.md` (sections 15–18), `docs/IMPLEMENTATION_PLAN.md` (Stage C, sections 9–10), `docs/BENCHMARKS.md`, `docs/TESTING.md`, `docs/MASTERMIND_REUSE_MAP.md`; Requirement IDs BG-01 through BG-10 |
 | Dictionary, answer/dice and benchmark data versions | `assets/dictionary.txt` SHA-256: `eda7bc8b86a534de8065a7d0cc091dc918d400475061749d05a5711afda12a3b` (178,691 words); Versioned generators: `BG-G1-UNIFORM-V1`, `BG-G2-WEIGHTED-V1`, `BG-G3-DICE-V1`; Benchmark seed: `0x5EED2026`; Benchmark report: `docs/benchmarks/boggle/run-20261102/REPORT.md` |
 | Working-tree state during review | Clean on `feat/boggle` at commit `94ff06e0e6928a9396280fca71d10c827de165bd`; author edits paused; sibling repository `mastermind` clean on `main` (`32e3020`) and completely untouched |
