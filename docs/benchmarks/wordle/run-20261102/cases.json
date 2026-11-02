@@ -1,0 +1,9 @@
+[
+  {"stratum": "all_matches", "description": "Exact match: guess identical to secret target", "sample_target": "ABOUT", "sample_guess": "ABOUT"},
+  {"stratum": "no_matches", "description": "Disjoint pairs with zero matching letters", "sample_target": "CRANE", "sample_guess": "TOILS"},
+  {"stratum": "exact_partial_mixed", "description": "Mixture of exact and misplaced letters", "sample_target": "CRANE", "sample_guess": "CARVE"},
+  {"stratum": "repeated_target_letters", "description": "Target word contains duplicate letters", "sample_target": "APPLE", "sample_guess": "ALLEY"},
+  {"stratum": "repeated_guess_letters", "description": "Guess word contains duplicate letters", "sample_target": "LEVEL", "sample_guess": "EERIE"},
+  {"stratum": "excess_occurrences", "description": "Guess has more duplicate occurrences than target", "sample_target": "WATER", "sample_guess": "EERIE"},
+  {"stratum": "corpus_random_pairs", "description": "Randomly sampled secret answers against allowed dictionary words", "sample_target": "ABOUT", "sample_guess": "TILER"}
+]
