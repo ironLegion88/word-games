@@ -1,0 +1,16 @@
+{
+  "benchmark": "wordle_feedback_algorithms",
+  "run_id": "run-20261102",
+  "mode": "full",
+  "timestamp_utc": "2026-11-02T16:20:00Z",
+  "seed": "0x5EED2026",
+  "batches_per_stratum": 30,
+  "pairs_per_batch": 1000,
+  "warmups": 5,
+  "algorithms": [
+    { "id": "WL-F1", "name": "Marker-based positional scorer", "provenance": "Adapted from mastermind/src/scoring.rs" },
+    { "id": "WL-F2", "name": "26-entry frequency array scorer", "provenance": "Production default O(L+26)" }
+  ],
+  "dictionary_sha256": "EDA7BC8B86A534DE8065A7D0CC091DC918D400475061749D05A5711AFDA12A3B",
+  "answers_sha256": "8DBC0086DA0C351C96D4D0064D3411058277E5A8BA566C4E8296A0ADF2E73C25"
+}

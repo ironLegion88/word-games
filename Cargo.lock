@@ -140,6 +140,15 @@ dependencies = [
  "rand",
  "spelling-bee",
  "trie",
+ "wordle",
+]
+
+[[package]]
+name = "wordle"
+version = "0.1.0"
+dependencies = [
+ "rand",
+ "trie",
 ]
 
 [[package]]

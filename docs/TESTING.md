@@ -176,7 +176,7 @@ The sections below extend this testing document; they do not replace the dated A
 |---|---|---|---|
 | Spelling Bee | `feat/spelling-bee` | SB-S1, SB-S2, SB-P1/P2, SB-H1 | IMPLEMENTED / 34 new tests PASS (95 total) / 449.87x speedup (26.94 µs vs 12.12 ms) / Subagent review RESOLVED / MERGED into `main` (commit 4bcf4e7) |
 | Boggle | `feat/boggle` | BG-S1, BG-S1E, BG-S2, BG-G1/G2/G3 | IMPLEMENTED / 54 new tests PASS (149 total) / 350x–840x speedup (30–150 µs vs 37–50 ms) / Subagent review RESOLVED / MERGED into `main` (commit 1729cef) |
-| Wordle | `feat/wordle` | WL-F1, WL-F2 | NOT IMPLEMENTED / NOT RUN / NOT RUN / NOT RUN / NOT MERGED |
+| Wordle | `feat/wordle` | WL-F1, WL-F2 | IMPLEMENTED / 58 new tests PASS (207 total) / 0.91x–1.80x speedup across 7 strata / Subagent review PENDING / MERGE PENDING |
 
 For requirement IDs and acceptance, use [IMPLEMENTATION_PLAN.md sections 9–10](IMPLEMENTATION_PLAN.md); for comparison methodology use [BENCHMARKS.md](BENCHMARKS.md). These game policies supersede earlier “future only” wording about weighted/dice generation and Wordle, while preserving timers and rich TUI/GUI as later work.
 
@@ -220,24 +220,24 @@ Keep the full-dictionary and tiny-fixture tests complementary. Random seven-lett
 
 For random tests, deliberately include a restricted alphabet to create repeated-letter/backtracking pressure. Full-dictionary stress tests need documented budgets; never label an incomplete search as a complete correct result.
 
-## 10. Wordle test matrix — NOT IMPLEMENTED / NOT RUN
+## 10. Wordle test matrix — IMPLEMENTED / VERIFIED
 
-| Layer | Cases and properties | Evidence required before merge |
+| Layer | Cases and properties | Verified evidence on `feat/wordle` |
 |---|---|---|
-| Input/word type | Exactly five ASCII letters; case normalization; digits/Unicode/punctuation/wrong length; ordinary text versus slash commands | Typed validation and no-panic tests |
-| Lexicon | All extracted guesses length five/sorted/unique; every answer in allowed set; nonempty curated answers; normalized override duplicates counted; invalid override all-or-nothing | Corpus integration and tiny answer-file fixtures with provenance |
-| WL-F1 baseline | Mastermind-derived markers; exact first; excess duplicates; partial assignments left to right | Complete expected arrays, not just counts |
-| WL-F2 production | Fixed remaining-frequency array, independently implemented | Complete equality with WL-F1 and independent multiset-removal oracle |
-| Exhaustive feedback | All 59,049 pairs over `{A,B,C}` at length five | Test count/cases; all complete arrays equal; no reused production oracle |
-| Random/corpus feedback | At least three fixed seeds; full alphabet and dictionary/answer pairs; `APPLE/ALLEY`, `LEVEL/EERIE`, all/no matches and duplicate traps | Seeded differential tests and aggregate Mastermind cross-check |
-| Attempts/state | Six valid guesses; invalid input consumes none; repeated valid word consumes one; history length matches attempts | Mutation assertions after every operation |
-| Terminal transitions | Correct sixth guess wins; sixth incorrect loses; no seventh evaluation; quit terminal; new round resets only round state | Transition invariants and scripted win/loss/quit fixtures |
-| Target selection/replay | Injected seed; answer always in curated list; reproducibility includes data/config; lexicon reused without trie clone | Testable selection and replay cases |
-| Feedback UI | Five cells per row, useful plain labels, ANSI reset/disabled behavior; keyboard correct > present > absent > unknown | Gray/yellow duplicates cannot downgrade prior stronger evidence |
-| CLI/end-to-end | Custom dictionary/answers; startup errors; seed; partial invalid inputs followed by valid words; replay; EOF; no unwanted game continuation | Compiled-binary scripts and current README commands |
-| Reuse audit | Every reused/adapted/excluded component is mapped to actual source and target | Source commit/hashes, updated map, adapted tests, no sibling dependency or changes |
-| Benchmarks | Both scorers on identical validated five-letter pairs; complete outputs consumed | Raw batches/report and honest spread, no assumed speedup |
-| Prior regressions | `trie-cli`, Bee and Boggle remain functional | Whole-workspace checks and previous README examples |
+| Input/word type | Exactly five ASCII letters; case normalization; digits/Unicode/punctuation/wrong length; ordinary text versus slash commands | 6 unit tests in `wordle/tests/word.rs` + 4 in `wordle/src/word.rs` PASS |
+| Lexicon | All extracted guesses length five/sorted/unique; every answer in allowed set; nonempty curated answers; normalized override duplicates counted; invalid override all-or-nothing | 5 integration tests in `wordle/tests/lexicon.rs` + 5 in `wordle/src/lexicon.rs` PASS |
+| WL-F1 baseline | Mastermind-derived markers; exact first; excess duplicates; partial assignments left to right | 5 unit tests in `wordle/src/feedback.rs` + table tests in `wordle/tests/feedback.rs` PASS |
+| WL-F2 production | Fixed remaining-frequency array, independently implemented | Complete equality with WL-F1 and independent multiset-removal oracle verified in `wordle/tests/feedback.rs` |
+| Exhaustive feedback | All 59,049 pairs over `{A,B,C}` at length five | `wordle/tests/feedback.rs::test_exhaustive_59049_pairs_over_abc` PASS (100% agreement) |
+| Random/corpus feedback | At least three fixed seeds; full alphabet and dictionary/answer pairs; `APPLE/ALLEY`, `LEVEL/EERIE`, all/no matches and duplicate traps | `wordle/tests/feedback.rs::test_seeded_differential_random_streams` & `test_curated_answers_cross_differential` PASS |
+| Attempts/state | Six valid guesses; invalid input consumes none; repeated valid word consumes one; history length matches attempts | 8 integration tests in `wordle/tests/session.rs` + 8 in `wordle/src/session.rs` PASS |
+| Terminal transitions | Correct sixth guess wins; sixth incorrect loses; no seventh evaluation; quit terminal; new round resets only round state | Verified in `wordle/tests/session.rs::test_final_sixth_attempt_win_evaluated_first`, `test_terminal_state_guard_blocks_seventh_submission` |
+| Target selection/replay | Injected seed; answer always in curated list; reproducibility includes data/config; lexicon reused without trie clone | Verified in `wordle/tests/session.rs::test_seeded_rng_selection_and_replay_reset` PASS |
+| Feedback UI | Five cells per row, useful plain labels, ANSI reset/disabled behavior; keyboard correct > present > absent > unknown | 3 tests in `wordle/tests/keyboard.rs` + 2 in `wordle/src/keyboard.rs` PASS |
+| CLI/end-to-end | Custom dictionary/answers; startup errors; seed; partial invalid inputs followed by valid words; replay; EOF; no unwanted game continuation | 8 integration tests in `word-games-cli/tests/wordle_cli.rs` PASS |
+| Reuse audit | Every reused/adapted/excluded component is mapped to actual source and target | Sibling commit `32e3020`, SHA256 hashes, updated `docs/MASTERMIND_REUSE_MAP.md`, 0 sibling modifications |
+| Benchmarks | Both scorers on identical validated five-letter pairs; complete outputs consumed | `docs/benchmarks/wordle/run-20261102/` (`REPORT.md`, `samples.csv`, `cases.json`, `metadata.json`) generated |
+| Prior regressions | `trie-cli`, Bee and Boggle remain functional | All 149 prior tests continue passing without modification (207 workspace total) |
 
 ## 11. Independent review, remediation and merged-main evidence
 
@@ -248,7 +248,6 @@ The reviewer independently reads the requirements, source, base-to-head diff, re
 Required review paths, created by implementation agents only after actual review:
 
 - `docs/reviews/spelling-bee.md`
-- `docs/reviews/boggle.md`
 - `docs/reviews/boggle.md`
 - `docs/reviews/wordle.md`
 

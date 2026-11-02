@@ -25,7 +25,7 @@ Wordle is the approved project extension; no supplied PDF is its source of rules
 - Keep **Mastermind read-only and independently buildable**. It is currently a binary crate with `main.rs`, not a library dependency. Port narrow components into `word-games`; no sibling Cargo dependency, `include!`, symlink, source-repo refactor or hidden build step.
 - Follow every applicable row of `MASTERMIND_REUSE_MAP.md`. Reuse its exact-first duplicate-safe matching logic, session/attempt/replay structure, injected RNG/I/O seams, ANSI/plain utilities and test patterns where suitable. Reuse shared CLI components already ported by Bee/Boggle instead of copying another set.
 - Record actual source symbols/commit/hashes, target paths/symbols, copied versus adapted versus design-only versus intentionally excluded status, adapted tests and implementing commits. Do not claim new lexicon/frequency/keyboard behavior was copied from Mastermind. Explain justified exclusions rather than forcing numeric abstractions into Wordle.
-- Make small Conventional Commits with `feat(wordle)`, `test(wordle)`, `perf(wordle)`, `refactor(cli)` and `docs` scopes. Retain every required feedback implementation in the final code.
+- Make small Conventional Commits with `feat(wordle)`, `test(wordle)`, `perf(wordle)`, `refactor(cli)` and `docs` scopes. The commit headers should follow the 50/72 rule, with bulleted body. Retain every required feedback implementation in the final code.
 
 ## 3. Implement in dependency order
 

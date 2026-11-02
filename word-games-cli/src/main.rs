@@ -19,6 +19,7 @@ USAGE:
 AVAILABLE GAMES:
     spelling-bee    Play the Spelling Bee word puzzle game
     boggle          Play the Boggle word grid game
+    wordle          Play the Wordle word deduction game
 
 COMMON OPTIONS:
     --dictionary <PATH>   Path to dictionary file (default: assets/dictionary.txt)
@@ -40,6 +41,10 @@ BOGGLE OPTIONS:
     --generator <GEN>     Board generator: uniform | weighted | dice (default: uniform)
     --board <CHARS>       Fixed board tiles (row-major string or spaces/newlines)
 
+WORDLE OPTIONS:
+    --answers <PATH>      Path to custom answers override list
+    --feedback <STRATEGY> Feedback strategy: frequency | marker (default: frequency)
+
 EXAMPLES:
     cargo run -p word-games-cli -- spelling-bee
     cargo run -p word-games-cli -- spelling-bee --difficulty easy --seed 42
@@ -48,6 +53,9 @@ EXAMPLES:
     cargo run -p word-games-cli -- boggle --size 5 --generator weighted
     cargo run -p word-games-cli -- boggle --generator dice --seed 42
     cargo run -p word-games-cli -- boggle --board "CATSDOGSQREWBIRD"
+    cargo run -p word-games-cli -- wordle
+    cargo run -p word-games-cli -- wordle --seed 42 --feedback marker
+    cargo run -p word-games-cli -- wordle --answers assets/wordle_curated_answers.txt
 "#
     );
 }
@@ -69,8 +77,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     match game_name.to_ascii_lowercase().as_str() {
         "spelling-bee" | "bee" => run_spelling_bee(&args[1..])?,
         "boggle" => run_boggle(&args[1..])?,
+        "wordle" => run_wordle(&args[1..])?,
         other => {
-            eprintln!("Unknown game '{other}'. Available games: spelling-bee, boggle");
+            eprintln!("Unknown game '{other}'. Available games: spelling-bee, boggle, wordle");
             std::process::exit(1);
         }
     }
@@ -370,6 +379,114 @@ fn run_boggle(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         let session = boggle::BoggleSession::new(board, solutions, solver)?;
         let completed =
             word_games_cli::boggle::play_session(session, &mut reader, &mut stdout, color)?;
+
+        if !completed {
+            break;
+        }
+
+        match prompt_replay(&mut reader, &mut stdout, color)? {
+            ReplayChoice::SameSettings => continue,
+            ReplayChoice::Exit => break,
+        }
+    }
+
+    Ok(())
+}
+
+fn run_wordle(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
+    let mut dict_path = PathBuf::from("assets/dictionary.txt");
+    let mut answers_path: Option<PathBuf> = None;
+    let mut seed: Option<u64> = None;
+    let mut color = ColorMode::Auto;
+    let mut feedback_strategy = wordle::FeedbackStrategy::Frequency;
+
+    let mut i = 0;
+    while i < args.len() {
+        match args[i].as_str() {
+            "--dictionary" => {
+                i += 1;
+                if i < args.len() {
+                    dict_path = PathBuf::from(&args[i]);
+                }
+            }
+            "--answers" => {
+                i += 1;
+                if i < args.len() {
+                    answers_path = Some(PathBuf::from(&args[i]));
+                }
+            }
+            "--seed" => {
+                i += 1;
+                if i < args.len() {
+                    seed = Some(args[i].parse()?);
+                }
+            }
+            "--color" => {
+                i += 1;
+                if i < args.len() {
+                    color = ColorMode::from_str_name(&args[i])
+                        .ok_or_else(|| format!("invalid color mode '{}'", args[i]))?;
+                }
+            }
+            "--feedback" => {
+                i += 1;
+                if i < args.len() {
+                    match args[i].to_ascii_lowercase().as_str() {
+                        "frequency" | "freq" => {
+                            feedback_strategy = wordle::FeedbackStrategy::Frequency
+                        }
+                        "marker" | "markers" => {
+                            feedback_strategy = wordle::FeedbackStrategy::Marker
+                        }
+                        other => {
+                            return Err(format!(
+                                "unknown feedback strategy '{other}'. Options: frequency, marker"
+                            )
+                            .into());
+                        }
+                    }
+                }
+            }
+            "-h" | "--help" => {
+                print_usage();
+                return Ok(());
+            }
+            other => {
+                return Err(format!("unknown option '{other}' for wordle").into());
+            }
+        }
+        i += 1;
+    }
+
+    let trie = Trie::from_file(&dict_path)?;
+    let mut lexicon =
+        wordle::WordleLexicon::from_trie(&trie, wordle::lexicon::BUNDLED_CURATED_ANSWERS_SRC)?;
+
+    if let Some(ref ans_path) = answers_path {
+        let (new_lex, report) = lexicon.with_answers_file(ans_path)?;
+        if report.duplicates_filtered > 0 {
+            eprintln!(
+                "Note: Filtered {} duplicate lines from answers override file ({} unique answers loaded).",
+                report.duplicates_filtered, report.unique_answers
+            );
+        }
+        lexicon = new_lex;
+    }
+
+    use rand::SeedableRng;
+    let mut rng = match seed {
+        Some(s) => rand::rngs::StdRng::seed_from_u64(s),
+        None => rand::rngs::StdRng::from_entropy(),
+    };
+
+    let stdin = io::stdin();
+    let mut reader = BufReader::new(stdin.lock());
+    let mut stdout = io::stdout();
+
+    loop {
+        let game = wordle::WordleGame::with_rng(lexicon.clone(), feedback_strategy, &mut rng)?;
+        let completed =
+            word_games_cli::wordle::play_session(game, &mut reader, &mut stdout, color)?;
 
         if !completed {
             break;
