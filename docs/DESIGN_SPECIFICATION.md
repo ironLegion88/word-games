@@ -2,7 +2,8 @@
 
 **Status:** Approved design; Assignment 1 (`trie` + `trie-cli`) fully implemented and verified.<br>
 **First required release checkpoint:** Assignment 1, **Word Games** (`trie` + `trie-cli`) only — **COMPLETED**.<br>
-**Planned subsequent checkpoints:** Assignment 2, Spelling Bee; Assignment 3, Boggle. Wordle, sophisticated TUIs and GUIs are future extensions, not assigned work.
+**Approved subsequent checkpoints (code not yet implemented):** Spelling Bee, Boggle, then Wordle as a project extension. Dedicated prompts activate one game at a time. Rich TUI/GUI applications remain future scope.
+**Scope revision:** 2026-11-02; additive game contracts begin at section 15. Earlier trie design and checkpoint history are retained.
 **Authority:** The three supplied PDFs (`Word Games.pdf`, `Spelling Bee.pdf`, `Boggle.pdf`), the supplied `dictionary.txt`, and the user's recorded design decisions. Where this document goes beyond the PDFs, it is explicitly a project design decision.
 
 ## 1. Goals, scope, and delivery boundaries
@@ -14,7 +15,7 @@
 5. Support reliable CLI interaction now and eventually separate engine crates, TUI, GUI, and perhaps Wordle.
 6. Avoid presenting planned game capabilities as currently implemented in the README, CLI, help text, or test reports.
 
-**Hard stage gate:** An implementing agent MUST finish, test, document, verify, commit, report, and **STOP** after the `trie`/`trie-cli` assignment. Spelling Bee begins only on an explicit subsequent user instruction. Repeat the same stop after Spelling Bee and Boggle. Preparation of this spec is not authorization to implement future stages.
+**Stage gate:** Assignment 1 is complete. Invoking a dedicated game prompt authorizes only that game on its own branch, including the documented independent subagent review and local merge into `main`. Finish the current game, resolve review findings, verify documentation and checks, merge, report, and **STOP**. Boggle requires merged Spelling Bee; Wordle requires both games merged. This documentation update itself does not implement a game.
 
 ## 2. Assignment traceability and what is not specified
 
@@ -32,7 +33,7 @@ Seven **distinct** letters with one central letter; minimum word length four; le
 
 Generate an `N×N` board for `N ∈ {4,5,6}`; allow repeated tiles; valid words have at least three letters; each next tile is one of eight adjacent positions; no revisiting **the same tile instance** along a path; dictionary validation; scoring; robust comma/space/newline guess parsing; exit mid-round; non-retractable evaluated guesses; interactive CLI. Timer and `Qu` tiles are optional in the PDF. Project additions: `Qu` counts as two *letters* while using one *cell*; precomputed adjacency; `u64` visited mask; trie-guided DFS primary and on-demand search oracle; immediate feedback; later board-generation methods and quality benchmarks; no timed mode initially.
 
-The Boggle PDF only explicitly specifies **nine-letter words as two points per letter**; the user's extensions fix 9–12 at `2 × length`, 13–14 at `3 × length`, and 15 at `4 × length`. Words >15 are not present in the supplied dictionary; any generalized policy requires a deliberate follow-up decision, not an undocumented guess.
+The Boggle PDF only explicitly specifies **nine-letter words as two points per letter**; the user's extensions fix 9–12 at `2 × length`, 13–14 at `3 × length`, and 15 at `4 × length`. Words >15 are not present in the supplied dictionary. The approved extension for custom dictionaries is `4 × length` for **every length ≥15**, with checked score arithmetic.
 
 ## 3. Verified dictionary facts (input baseline)
 
@@ -65,14 +66,14 @@ word-trie/
     └── tests/cli.rs
 ```
 
-**Future evolution (ONLY after explicit authorization):**
+**Approved evolution (create each crate only when its game prompt is invoked):**
 
 ```text
 word-trie/
 ├── word-games-core/                   # create ONLY when verified shared game concerns arise
 ├── spelling-bee/                      # independent game engine, no UI dependency
 ├── boggle/                            # independent game engine, no UI dependency
-├── wordle/                            # possible extension, not requested now
+├── wordle/                            # approved extension after both earlier games
 ├── word-games-cli/                    # terminal presentation/interactive driver
 ├── word-games-tui/                    # potential future rich terminal UI
 └── word-games-gui/                    # potential future GUI
@@ -89,7 +90,7 @@ flowchart TB
   subgraph FUTURE[Future checkpoints — not implemented yet]
     S[Spelling Bee engine] --> LIB
     B[Boggle engine] --> LIB
-    W[Wordle engine — potential] --> LIB
+    W[Wordle engine — planned] --> LIB
     UI[CLI / TUI / GUI adapters] --> S
     UI --> B
     UI --> W
@@ -307,15 +308,15 @@ Rust borrowing limitation: while a shared `&Trie` borrow is live, code cannot ta
 - Puzzle generator chooses an existing dictionary word with **exactly seven distinct letters** as a pangram anchor, extracts its seven-letter set, selects a center, computes solutions, and accepts/grades puzzle by configurable difficulty and target count range. Use injected seedable RNG, bounded retry count, deterministic fallback or clear `NoSuitablePuzzle` error. Pangram anchor guarantees at least one potential pangram given the chosen center (since it contains all seven). Distribution is **not uniform**; bias must be documented. Different centers for the same letters may give different solution counts.
 - Difficulty is a versioned configuration based on observable quantities (solution count, length mix, pangram count, letter frequency or score potential), not an unexplained magic label; keep thresholds configurable.
 - Score: 4-letter = 1, length ≥5 = length, plus configurable 7-point pangram bonus (project default; PDF leaves choice open). Cache running total only after a **new** accepted guess. Invariant `cached_score == Σscore(accepted)`; duplicate/invalid submissions must not change it. Completion iff accepted set equals solution set; early quit reports missed words and score.
-- Generate optional hints from frozen solutions, not from guessed words or a new trie traversal; render sorted guesses alphabetically in three terminal columns. Give immediate typed feedback.
+- Generate both selected hint views from frozen solutions, not from guessed words or a new trie traversal; render sorted guesses alphabetically in three terminal columns. Give immediate typed feedback.
 
 ## 12. Boggle future design (checkpoint 3 only)
 
 - Engine `boggle` stores immutable validated `Grid { size: usize, tiles: Vec<Tile> }`, size in `{4,5,6}`, `Tile::Letter(Letter) | Tile::Qu`, precomputed adjacency vectors (at most eight neighbors/cell), immutable sorted solution snapshot, mutable accepted guesses and cached score.
 - Index cells by `r*N+c`. A `u64` visited mask holds up to 36 cell flags. Passing a mask by value into DFS preserves branch independence. In `Qu`, advance trie cursor by `Q` **then** `U`, visit the tile once, and count two spelled letters for minimum length/scoring.
 - Preferred solver: trie-guided DFS from each starting cell, stopping when the prefix cursor fails, recording terminal words length ≥3, deduplicating paths by word. Build a simpler **on-demand per-guess DFS validator** as an independent oracle/backup; compare identical results for fixed boards and generated boards. Benchmark both over varying sizes, vowel distributions, and repeated-letter boards; report worst-case search-work/latency.
-- Generate boards with (1) uniform letter sampling first; (2) frequency-weighted later; (3) dice-like sampling later. Compare quality using valid-solution count, reachable score, word-length mix, vowel balance, solve time and repeatability; do not assert one distribution is better without measurement. Allow deterministic seed injection.
-- Scoring from project decision: lengths 3–4 →1; 5→2; 6→3; 7→5; 8→11; 9–12→`2*len`; 13–14→`3*len`; 15→`4*len`. Reject/deliberately specify behavior for >15-letter words if later dictionaries permit them.
+- Generate boards with (1) uniform letter sampling first; (2) frequency-weighted after the core passes; (3) dice-like after the weighted version passes. All three are included in the Boggle branch, retained as selectable strategies, and benchmarked before merge. Compare quality using valid-solution count, reachable score, word-length mix, vowel balance, solve time and repeatability; do not assert one distribution is better without measurement. Allow deterministic seed injection.
+- Scoring from project decision: lengths 3–4 →1; 5→2; 6→3; 7→5; 8→11; 9–12→`2*len`; 13–14→`3*len`; lengths ≥15→`4*len`, including custom-dictionary words longer than the supplied corpus maximum. Use checked arithmetic.
 - Case-normalize guesses and reject punctuation/hyphens; supplied dictionary lacks metadata to identify proper nouns, so proper-noun exclusion cannot be reliable. Q-without-U spellings are initially unsupported by `Qu` board tiles (and this limitation must appear in docs). Untimed game first; optional timeouts, difficulty-based board generation, and size-dependent timers later.
 - Precompute all solutions with a temporary `&Trie`, own solutions afterward, and give immediate feedback. No retracting accepted/evaluated guesses. Robust mixed-delimiter batch input and graceful `/quit`.
 
@@ -325,16 +326,161 @@ Every crate and phase must have small deterministic unit tests, integration test
 
 **Authoritative documentation files:** `README.md` is the landing page describing what **actually works now** (features, installation, commands, running examples, tests); `docs/TESTING.md` records what **has actually been executed**, its evidence and the planned test matrix. `docs/DESIGN_SPECIFICATION.md` contains architecture/decisions and `docs/IMPLEMENTATION_PLAN.md` has tasks/gates. Keep all four accurate with every material change.
 
-**Mandatory checkpoint re-verification:** At each of the three assignment checkpoints, inspect source/Cargo workspace/CLI help/tests, reconcile claims in README and TESTING, run documented commands, correct inaccurate sections, update dated checkpoint evidence, and only then commit/finalize the checkpoint. A green test run is not a substitute for checking documentation against repository behavior.
+**Mandatory checkpoint re-verification:** At every assignment checkpoint and the Wordle extension checkpoint, inspect source/Cargo workspace/CLI help/tests, reconcile claims in README and TESTING, run documented commands, correct inaccurate sections, update dated checkpoint evidence, and only then commit/finalize the checkpoint. A green test run is not a substitute for checking documentation against repository behavior.
 
 ## 14. Decisions explicitly deferred
 
 1. Future boxed/adaptive/map trie implementations and their performance comparison.
 2. New traits if/when there is a real alternative backend.
 3. Rich TUI/GUI, concurrent game sessions, persistence, distribution, networking.
-4. Wordle and any game-specific vocabulary curation.
-5. Timed Boggle, later Boggle generation methods, puzzle difficulty/timer tuning.
-6. Policy for >15-letter Boggle words on dictionaries other than the supplied input.
+4. Wordle hard mode, daily/online puzzles, persistence, and Mastermind-style point multipliers.
+5. Timed Boggle, human-calibrated board difficulty, and size-dependent timer tuning. Uniform/weighted/dice generation is now included in the approved Boggle branch.
+6. A shared cross-repository library that requires changing the Mastermind repository; the current reuse route keeps it untouched.
 7. Any dictionary modification during an already-started game's immutable solution snapshot.
 
 The implementing agent may identify additional questions but must choose the smallest safe and documented assumption **only where this spec does not already settle behavior**. A material deviation from a selected design requires explicit user authorization.
+
+## 15. Approved scope supplement — 2026-11-02
+
+This supplement extends the existing specification. Sections 1–14 retain the original trie architecture and game decisions, with targeted updates for the approved scope. No Rust source, Cargo manifest, dictionary, or Mastermind source is changed by the documentation package.
+
+| Checkpoint | Branch, based on current `main` | Required algorithm progression | Finish before starting another game |
+|---|---|---|---|
+| Spelling Bee | `feat/spelling-bee` | Complete filtering baseline → trie-pruned solver → comparative benchmarks | Tests, documentation, independent subagent review, resolved findings, local merge |
+| Boggle | `feat/boggle` | On-demand path baseline and dictionary-scan enumeration → trie solver; uniform → weighted → dice-like generation | Both solver and generator comparisons, full review and local merge |
+| Wordle extension | `feat/wordle` | Mastermind-derived marker feedback → frequency-count feedback → comparative benchmarks | Both earlier games already merged; full review and local merge |
+
+“Version” means a named algorithm implementation and a tested Git milestone, not three disconnected applications or duplicated full game engines. Retain the baseline and optimized implementations at the final branch head. Select algorithms through small concrete enums or functions; defer a generic game/dictionary framework until a real requirement justifies it. Production defaults are Bee trie pruning, Boggle trie solving with uniform generation, and Wordle frequency-count feedback. New defaults require evidence and a documented decision.
+
+The boxed, adaptive and map-based trie comparisons remain an explicitly deferred storage-research track. Preserve their workload matrix in `BENCHMARKS.md`; do not silently add several trie backends to a game branch. Timers, rich TUI/GUI, persistent accounts/scores, online/daily puzzles and Wordle hard mode remain outside these prompts.
+
+## 16. Engine boundaries, presentation, and reproducibility
+
+### 16.1 Repository and module layout
+
+The user's two independent Git repositories are siblings under `Assignment 3`: `word-games` and `mastermind`. Work and commits occur in `word-games`. Read Mastermind as a source reference; do not change its files, `.git` state, dependencies, or history. There must be no Cargo dependency on `../mastermind`, no cross-repository `include!`, and no symlink required to build the finished games.
+
+Create these modules only in the corresponding game branch. The paths are agreed targets; if existing code at implementation time already provides a suitable equivalent, adapt it and update the mapping instead of creating duplicates.
+
+| Crate | Planned modules | Ownership and responsibility |
+|---|---|---|
+| Existing `trie` | Existing modules and public exports | Preserve current API; temporarily lend `&Trie` during setup |
+| `spelling-bee` | `puzzle`, `generation`, `solver`, `session`, `hints`, `error` | Validated puzzle, both solvers, owned sorted solutions, accepted guesses, checked cached score |
+| `boggle` | `board`, `path`, `solver`, `generation`, `session`, `scoring`, `error` | Immutable tiles/adjacency, both search strategies, three generators, owned solution snapshot |
+| `wordle` | `word`, `lexicon`, `feedback`, `session`, `error` | Validated five-letter values, owned lexicon, both feedback algorithms, private secret/history/status |
+| `word-games-cli` | `main`, `commands`, `terminal`, `replay`, `spelling_bee`, then `boggle`, then `wordle` | Testable I/O adapters, launcher/subcommands, styling and per-game presentation |
+
+Engines must not read stdin, print terminal output, choose global randomness, or depend on the CLI. Build benchmark binaries under each engine's `benches/algorithms.rs` with stable custom harnesses; keep benchmark I/O outside engine logic. Create `word-games-core` only if shared non-UI code actually arises and the extraction improves clarity. The existing `trie-cli` remains independently runnable.
+
+```mermaid
+flowchart TD
+  CLI["word-games-cli: launcher and terminal adapters"] --> SB["Spelling Bee engine"]
+  CLI --> BG["Boggle engine"]
+  CLI --> WL["Wordle engine"]
+  SB -. "setup borrow" .-> T["Existing trie"]
+  BG -. "setup borrow" .-> T
+  WL -. "lexicon extraction" .-> T
+  MM["Read-only Mastermind reference"] -. "adapted components" .-> CLI
+  MM -. "marker feedback and session patterns" .-> WL
+```
+
+Dashed Mastermind edges represent development-time code adaptation, not a runtime/build dependency. Each game retains its own state and rule implementation; the CLI shares only useful presentation and interaction helpers.
+
+### 16.2 CLI contract
+
+The planned commands are `cargo run -p word-games-cli` for the launcher and `cargo run -p word-games-cli -- <game> ...` for `spelling-bee`, `boggle`, and eventually `wordle`. They become README usage examples only after their branch actually implements and verifies them.
+
+- Common options: `--dictionary <path>`, `--seed <u64>`, `--color auto|always|never`, and help. Support quoted paths containing spaces. Load the dictionary once for repeated rounds where practical.
+- Bee: `--solver filter|trie`, `--difficulty easy|medium|hard`, `--min-words`, `--max-words`, optional `--center`, and a fixed-puzzle `--letters` override requiring a center.
+- Boggle: `--size 4|5|6`, `--solver scan|trie`, `--generator uniform|weighted|dice`, and a fixed-board fixture option. `scan` means full dictionary-scan enumeration via independent word-path validation, preserving the owned-snapshot session design. The separate on-demand validator remains available as an API and benchmark baseline.
+- Wordle: `--answers <path>` override and `--feedback marker|frequency`. Gameplay remains five letters and six attempts in both algorithm modes.
+- In-round commands use slash prefixes: `/help`, `/quit`, and appropriate `/hints` or `/guesses` commands. Do not reserve playable dictionary words such as `QUIT`. Wordle processes one guess per line; Bee and Boggle support the specified comma/ASCII-whitespace tokenization with per-word feedback.
+- Validate every token in a Bee/Boggle batch before changing state. If syntax is malformed, reject the line without accepting an earlier token. For a well-formed batch, evaluate tokens in order; normal gameplay rejections do not roll back earlier accepted words. After terminal completion, stop processing the remainder and explain that the round ended.
+- Replay creates a new puzzle with the same settings or returns to the launcher. EOF closes cleanly without a replay prompt loop. In-memory progress may be displayed; no disk persistence is required.
+- Adapt Mastermind's ANSI helpers and rendering structure. Respect `NO_COLOR`; auto mode must also detect redirected/non-terminal output. Plain output must communicate feedback using text labels, not color alone. Do not carry over fixed numeric prompts or panel widths that truncate long word lists.
+
+### 16.3 Snapshot and validation contracts
+
+Bee and Boggle constructors borrow `&Trie` only while producing complete, sorted, unique solution vectors. Sessions own these vectors; they neither clone nor mutate the trie. Preserve `BTreeSet<String>` accepted guesses and the cached-score invariant. Completion, quit and subsequent submissions are explicit states: after a round terminates, a submission returns `GameFinished` without changing guesses, history or score. Invalid/duplicate Bee and Boggle words never earn points and cannot retract earlier evaluations. Check score arithmetic and return a typed error rather than wrapping or panicking for custom inputs.
+
+An owned solution set cannot by itself distinguish “not in dictionary” from “in dictionary but impossible on this board”. Use an honest `NotASolution` outcome when that distinction is unavailable; do not retain the entire trie just for a misleading diagnostic. The independent Boggle path API can provide additional explanations when explicitly used. Normal constructors must never publish an incomplete solution set after a search budget is exhausted: return `SearchLimitExceeded` and no session instead. Benchmark failures/timeouts remain visible, not counted as zero-word boards.
+
+Use an injected RNG, compatible with the existing Mastermind `rand` 0.8 approach, and record the actual RNG, locked dependency versions, seed, configuration, data hashes and generator version. A seed alone is not a cross-version reproducibility guarantee. Deterministic tests must not depend on iteration order from a hash collection. Materialize shared benchmark cases before timing competing strategies so random draw consumption cannot change their inputs.
+
+## 17. Spelling Bee additions and algorithm versions
+
+| ID | Increment | Retained behavior and proof |
+|---|---|---|
+| SB-S1 | Exhaustive word filtering | Visit dictionary words, validate masks/center/length; complete sorted-set oracle |
+| SB-S2 | Trie-pruned traversal | Follow only allowed-letter edges; identical complete output; production default |
+| SB-P1 | Pangram-anchored seeded generation | Sorted eligible anchor words with exactly seven distinct letters; select anchor and center; bounded retry |
+| SB-P2 | Configurable generation and difficulty | Explicit count bounds, fixed center/puzzle overrides, versioned dictionary-calibrated presets |
+| SB-H1 | Hint and presentation increment | Initial-letter × length grid, two-letter-prefix counts, score/pangram totals, three-column accepted-word display |
+
+SB-S1 must be complete and tested before SB-S2 is introduced. Both algorithms share validation and scoring but must not implement one solver by calling the other. Test complete solution-set equality on tiny exact fixtures, sampled full-dictionary puzzles, random seven-letter sets, every center for sampled sets, zero solutions and repeated letters.
+
+Anchor selection is word-weighted: several anchors can yield the same letter set. Record this bias. Anchoring guarantees a pangram for any center in the set, but does not make all resulting puzzles equally playable. Normal generation uses at least one pangram, a positive minimum solution count and a finite attempt budget; return `NoSuitablePuzzle` when exhausted. A fixed-puzzle constructor may represent zero solutions for tests, but the normal CLI should explain and reject an empty playable round rather than grant Queen Bee immediately.
+
+Difficulty presets are completion-workload proxies, not a claim about human vocabulary difficulty. Calibrate SB-P2 against the supplied dictionary after SB-S2 works: deterministically sample up to 256 distinct eligible letter sets, evaluate all seven centers, and record solution-count and length/score distributions. Use small/medium/large solution-count bands mapped to easy/medium/hard; publish exact disjoint integer boundaries and tie handling in a versioned asset plus the calibration seed/hash. If the dataset cannot support three nonempty bands, report it and preserve explicit bounds rather than inventing measurements. Explicit min/max overrides intersect the selected preset; reject an empty intersection. A provided center constrains anchor selection. Record generation retries and preprocessing cost separately in benchmarks.
+
+Default scoring remains 1 point for length four; length points for ≥5; plus 7 for a pangram. Derive both hint views from the frozen solution set. Default hints show **total puzzle counts**, clearly labelled; do not silently change them to remaining-word counts. On quit, report score and every missed word. Queen Bee requires equality of accepted and complete target sets, never only a score threshold.
+
+## 18. Boggle additions and algorithm versions
+
+### 18.1 Search versions and semantics
+
+| ID | Algorithm | Purpose |
+|---|---|---|
+| BG-S1 | Dictionary membership + independent per-word board DFS | On-demand validation baseline; no trie-prefix pruning in path search |
+| BG-S1E | Visit dictionary words and apply BG-S1's independent path search | Complete snapshot baseline and `scan` fallback |
+| BG-S2 | Trie-guided board DFS | Complete snapshot production solver and default |
+
+Test BG-S1 before BG-S1E, and compare BG-S1E and BG-S2's **full sets** before benchmarking. BG-S1's path code must not call the optimized cursor traversal. A single word may have several valid paths but enters the solution set and earns points once. Verify a successful path starts at any tile, uses eight-neighbor edges, and visits no tile twice. A `Qu` tile consumes one visited bit and spells two letters. The validated board policy maps Q input/generated faces to `Qu`; bare-Q gameplay is deferred and Q-without-U words remain unavailable. A word's spelled length, not number of tiles, controls minimum length and scoring.
+
+Preserve the existing score table through length 14 and use `4 × length` for all lengths ≥15. Custom dictionaries remain supported; do not cap the trie or reject every word longer than the supplied corpus maximum. Verify at least one realizable >15-letter fixture on a large board, arithmetic overflow behavior, and the 36th visited-cell bit.
+
+Benchmark both complete enumerators and, separately, end-to-end query traces: trie setup + snapshot lookup versus dictionary lookup + BG-S1 per guess. Vary trace length and include positive, negative and repeated guesses. Do not compare only trie lookup against a full path search while omitting setup cost.
+
+### 18.2 Generation versions
+
+| ID | Generator | Data and rules |
+|---|---|---|
+| BG-G1 | Uniform | Independent uniform A–Z samples; sampled Q becomes `Qu`; original baseline/default |
+| BG-G2 | Weighted | Per-letter counts derived from all supplied dictionary spellings, add-one smoothing, versioned integer weights and dictionary SHA-256 |
+| BG-G3 | Dice-like | Versioned synthetic six-face dice for each supported size; one face from each die followed by a seeded Fisher–Yates shuffle |
+
+Implement and test BG-G1 first, BG-G2 second and BG-G3 third. All remain selectable; they are required staged additions in the current Boggle branch, not silently discarded experiments. For self-contained BG-G3 data, allocate `6*N*N` face slots from BG-G2 weights by largest remainders (alphabetical tie breaking), order the repeated face letters deterministically, and distribute slots round-robin over `N*N` dice, six faces per die. Map Q faces to `Qu`. Commit the generated tables, derivation script, hashes, and tests of shape/determinism. These are **project-generated dice-like distributions**, not official commercial dice or natural-language usage frequencies. The dictionary itself biases BG-G2 weights; document that limitation.
+
+Keep raw board generators separate from playable-board selection. Normal random play retries an empty board within a documented finite budget and returns `NoPlayableBoard` when exhausted; fixed-board constructors can represent empty boards for tests. Compare raw zero-word rates and conditioned accepted-board quality separately, with retries, rejection rates and solver failures included. A seed/configuration identifies the generator and policy version. Tests may inject a finite search-expansion budget; exceeding any production guard must fail setup explicitly, never truncate the solution set. Timers and human-calibrated Boggle difficulty presets remain deferred.
+
+## 19. Wordle extension and Mastermind reuse
+
+Wordle is a project extension after both earlier games, not a new requirement attributed to the PDFs. Follow the detailed [Mastermind reuse map](MASTERMIND_REUSE_MAP.md). The source snapshot is a binary crate (`src/main.rs`), not an importable library. Port the narrow reusable pieces into existing target modules, preserving provenance and tests, and leave the original repository untouched.
+
+### 19.1 Rules, lexicon and state
+
+- Exactly five ASCII letters and six **valid** guesses. Normalize case with the existing trie helper. Repeated letters are valid. A malformed/incorrect-length/non-dictionary guess consumes no attempt; a repeated valid word consumes an attempt and produces feedback again.
+- Distinguish allowed guesses from possible answers. Build an owned sorted unique five-letter guess vector using the supplied trie. Curate a bundled nonempty answer subset locally (target at least 100 checked entries); every answer must be in the allowed vector. Record curation/provenance in a companion text document; do not imply the list is an official Wordle corpus or a measured frequency ranking. A smaller explicit user/test answer file is valid when nonempty.
+- `--answers` overrides must be fully validated before a round starts. Normalize/deduplicate with a reported duplicate count; reject malformed, non-five-letter or out-of-dictionary entries. Do not silently filter invalid answer candidates.
+- The engine owns its `WordleLexicon` and private round state; reuse that owned lexicon when resetting for a replay instead of cloning the entire trie or copying the lexicon every guess. No persistent `&Trie`, `Rc`, `Arc` or interior mutability is required.
+- Check a correct sixth guess before declaring loss. Persist terminal state; a further submission is `GameFinished` with no history/attempt mutation. On loss or quit, reveal the answer. Report win/loss and attempts, without importing Mastermind's numeric difficulty or point multipliers.
+- Render a five-cell row per evaluated guess and a letter-status keyboard, with text fallback. Keyboard status is monotonic: correct outranks present, which outranks absent, which outranks unknown. A gray duplicate must not downgrade stronger evidence for that letter.
+
+### 19.2 Feedback algorithm versions
+
+`Feedback` is `[LetterFeedback; 5]`, where each position is `Correct`, `Present` or `Absent`. Make exact matches first, consume only unmatched target occurrences for partial matches, and allocate partial matches in left-to-right guess order.
+
+| ID | Algorithm | Required preservation |
+|---|---|---|
+| WL-F1 | Adapted Mastermind two-pass matching markers | Retain the existing exact-first, one-to-one matching logic; emit positional marks rather than only aggregate counts |
+| WL-F2 | Two-pass 26-letter remaining-frequency array | Same positional result with O(L+26) work and fixed alphabet storage; production default |
+
+The original `score_guess` may corroborate aggregate counts (correct = Bulls, present = Cows), but cannot establish the positional assignment. Use a third independent test oracle based on removing occurrences from an unmatched target multiset, without calling either production scorer. Exhaustively compare all 59,049 target/guess pairs over a three-letter alphabet at length five, plus seeded full-alphabet and dictionary cases. Include `APPLE` versus `ALLEY`, `LEVEL` versus `EERIE`, and excess repeated letters. Benchmark full feedback arrays at the real five-letter length; label any longer internal-kernel stress measurements separately and do not expose variable-length gameplay.
+
+Mastermind's RNG-injection seam, attempt/replay lifecycle, testable `BufRead`/`Write` loops, ANSI/plain helpers and rendering organization are reusable. Numeric parsers, unconstrained numeric target generation, public mutable secret/configuration fields, unguarded post-finish submissions, and old point formulas do not satisfy these Wordle contracts unchanged. Adapt them deliberately and test the strengthened invariants.
+
+## 20. Version, benchmark and independent-review evidence
+
+Maintain the existing README and TESTING by edits, preserving checkpoint history. Add factual stage evidence, not a replacement document. Each algorithm milestone should have a coherent Conventional Commit, passing tests and benchmark smoke evidence before the next algorithm increment. A fast baseline remains required even when it is slower in measurements; do not delete an oracle to make a comparison look better.
+
+Use the shared [benchmark protocol](BENCHMARKS.md) and per-game [implementation plan](IMPLEMENTATION_PLAN.md). Before merge, a fresh subagent must read the specifications, original game assignment where applicable, current source and base-to-head diff; run its own checks; and report findings with file/line evidence. It must not certify solely from the author's summary or test log. Resolve findings and request re-review as specified in the plan. This review is required for each game's implementation; this documentation package does not claim that any future code has been reviewed.
