@@ -14,4 +14,3 @@ rand = "0.8"
 [[bench]]
 name = "algorithms"
 harness = false
-

@@ -249,7 +249,6 @@ Required review paths, created by implementation agents only after actual review
 
 - `docs/reviews/spelling-bee.md`
 - `docs/reviews/boggle.md`
-- `docs/reviews/boggle.md`
 - `docs/reviews/wordle.md`
 
 If subagent capability is absent or required checks cannot run, mark the gate blocked and preserve the feature branch; do not claim independent verification or merge. Once clear, merge that game's branch locally with `--no-ff` into `main`, rerun required workspace checks and game/documentation/benchmark smoke, record the real merge SHA, and stop. No remote push is required.

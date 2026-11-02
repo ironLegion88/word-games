@@ -1,10 +1,10 @@
 # Wordle Curated Answer Subset Provenance and Curation Notes
 
-**Version:** 1.0.0 (2026-11-02)  
-**File path:** `assets/wordle_curated_answers.txt`  
-**Total entries:** 489 words  
-**SHA-256:** `8DBC0086DA0C351C96D4D0064D3411058277E5A8BA566C4E8296A0ADF2E73C25`  
-**Reference dictionary:** `assets/dictionary.txt` (178,691 words, SHA-256: `EDA7BC8B86A534DE8065A7D0CC091DC918D400475061749D05A5711AFDA12A3B`)
+- **Version:** 1.0.0 (2026-11-02)
+- **File path:** `assets/wordle_curated_answers.txt`
+- **Total entries:** 489 words
+- **SHA-256:** `8DBC0086DA0C351C96D4D0064D3411058277E5A8BA566C4E8296A0ADF2E73C25`
+- **Reference dictionary:** `assets/dictionary.txt` (178,691 words, SHA-256: `EDA7BC8B86A534DE8065A7D0CC091DC918D400475061749D05A5711AFDA12A3B`)
 
 ---
 
@@ -28,4 +28,3 @@ Every entry in `assets/wordle_curated_answers.txt` adheres strictly to the follo
 2. **Dictionary Invariant:** Every curated answer is guaranteed to exist in the 8,938 five-letter entries of `assets/dictionary.txt` without exception (0 missing out of 489).
 3. **Format:** Exactly one uppercase word per line, terminated with Unix newline (`\n`), sorted lexicographically, and strictly free of duplicates.
 4. **Vocabulary Selection:** Composed of common, recognizable everyday English words (e.g., `APPLE`, `BREAD`, `CHAIR`, `DANCE`, `EAGLE`, `FLAME`, `GRAPE`, `HOUSE`, `WATER`, `WORLD`).
-
