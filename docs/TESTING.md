@@ -174,7 +174,7 @@ The sections below extend this testing document; they do not replace the dated A
 
 | Checkpoint | Feature branch | Required versions | Implementation / tests / comparative benchmarks / subagent review / merge |
 |---|---|---|---|
-| Spelling Bee | `feat/spelling-bee` | SB-S1, SB-S2, SB-P1/P2, SB-H1 | IMPLEMENTED / 28 new tests PASS (89 total) / 449.87x speedup (26.94 µs vs 12.12 ms) / Pending subagent review / NOT MERGED |
+| Spelling Bee | `feat/spelling-bee` | SB-S1, SB-S2, SB-P1/P2, SB-H1 | IMPLEMENTED / 34 new tests PASS (95 total) / 449.87x speedup (26.94 µs vs 12.12 ms) / Pending subagent review / NOT MERGED |
 | Boggle | `feat/boggle` | BG-S1, BG-S1E, BG-S2, BG-G1/G2/G3 | NOT IMPLEMENTED / NOT RUN / NOT RUN / NOT RUN / NOT MERGED |
 | Wordle | `feat/wordle` | WL-F1, WL-F2 | NOT IMPLEMENTED / NOT RUN / NOT RUN / NOT RUN / NOT MERGED |
 

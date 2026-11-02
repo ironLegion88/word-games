@@ -262,7 +262,7 @@ The current executable features include `trie`, `trie-cli`, `spelling-bee`, and 
 
 Each prompt implements a working baseline, adds and retains its alternative algorithms, runs correctness comparisons and reproducible benchmarks, and then requires a fresh subagent to review the code independently. Findings must be resolved before the game's branch merges locally into `main`. The agent then stops. Remote pushes are not part of these prompts.
 
-The planned terminal entry point is `word-games-cli`, with an interactive launcher and game subcommands. These are design targets, not commands available in this snapshot. Mastermind remains independently buildable; selected code is adapted into this repository without a sibling-path runtime dependency.
+The terminal entry point is `word-games-cli`, providing an interactive launcher and the implemented `spelling-bee` game subcommand (with Boggle and Wordle subcommands planned for their respective milestones). Mastermind remains independently buildable; selected code is adapted into this repository without a sibling-path runtime dependency.
 
 ### Additional planning references
 
