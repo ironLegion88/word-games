@@ -162,6 +162,53 @@ fn test_hint_grid_and_counts_totals() {
 }
 
 #[test]
+fn test_dictionary_mutation_after_session_setup_does_not_affect_round() {
+    use trie::Trie;
+
+    let mut trie = Trie::new();
+    trie.insert("ACAI").unwrap();
+    trie.insert("MICRO").unwrap();
+
+    let puzzle = SpellingBeePuzzle::from_raw("CAIMORT").unwrap();
+    let solutions = spelling_bee::solve(&puzzle, &trie, spelling_bee::SolverStrategy::TriePruned);
+    let mut session = SpellingBeeSession::new(puzzle, solutions);
+
+    // Now mutate the trie completely (delete words and insert new ones)
+    trie.remove("ACAI").unwrap();
+    trie.insert("ROCOCO").unwrap();
+
+    // Session remains unaffected because it owns its solution snapshot
+    assert_eq!(
+        session.solutions(),
+        &["ACAI".to_string(), "MICRO".to_string()]
+    );
+    assert_eq!(
+        session.submit_guess("ACAI"),
+        GuessOutcome::Accepted {
+            word: "ACAI".into(),
+            points: 1,
+            is_pangram: false,
+            queen_bee: false,
+        }
+    );
+    // ROCOCO was added to trie after session setup, so session rejects it as not in this round's solutions
+    assert_eq!(
+        session.submit_guess("ROCOCO"),
+        GuessOutcome::InvalidWord(GuessError::NotInDictionary)
+    );
+    assert_eq!(
+        session.submit_guess("MICRO"),
+        GuessOutcome::Accepted {
+            word: "MICRO".into(),
+            points: 5,
+            is_pangram: false,
+            queen_bee: true,
+        }
+    );
+    assert!(session.is_queen_bee());
+}
+
+#[test]
 fn test_randomized_session_invariants() {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
@@ -177,10 +224,7 @@ fn test_randomized_session_invariants() {
         let mut rng = StdRng::seed_from_u64(seed);
         let mut session = build_test_session();
 
-        for _ in 0..100 {
-            if session.is_terminated() {
-                break;
-            }
+        for _ in 0..1000 {
             let choice = rng.gen_range(0..candidate_pool.len());
             let word = candidate_pool[choice];
             let _ = session.submit_guess(word);
