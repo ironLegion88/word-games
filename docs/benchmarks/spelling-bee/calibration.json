@@ -1,0 +1,31 @@
+{
+  "protocol": "SB-P2-CALIBRATION-V1",
+  "seed": "0xCA11_B2A7_2026",
+  "dictionary_sha256": "eda7bc8b86a534de8065a7d0cc091dc918d400475061749d05a5711afda12a3b",
+  "sampled_letter_sets": 256,
+  "evaluated_configurations": 1792,
+  "observed_statistics": {
+    "min_solutions": 6,
+    "p33_solutions": 125,
+    "p67_solutions": 237,
+    "max_solutions": 1243
+  },
+  "difficulty_presets": {
+    "easy": {
+      "min_words": 15,
+      "max_words": 125,
+      "description": "Lower completion workload (lower tertile)"
+    },
+    "medium": {
+      "min_words": 126,
+      "max_words": 237,
+      "description": "Moderate completion workload (middle tertile)"
+    },
+    "hard": {
+      "min_words": 238,
+      "max_words": 600,
+      "description": "High completion workload (upper tertile)"
+    }
+  },
+  "tie_handling": "Boundary values map to lower band; explicit user min/max bounds intersect with preset bounds."
+}

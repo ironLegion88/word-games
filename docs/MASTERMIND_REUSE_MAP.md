@@ -91,6 +91,10 @@ For every implemented row add actual target path/symbol, source commit/hash, dis
 
 | Map ID | Actual target symbol/path | Source version | Disposition and rationale | Actual tests | Implementing commit | Independent review |
 |---|---|---|---|---|---|---|
-| — | NOT IMPLEMENTED | Inspected hashes above | Planning only | NOT RUN | No target commit yet | No code review yet |
+| MM-11 | `word-games-cli/src/replay.rs::ReplayChoice` | `src/game.rs` | Adapted menu parsing for game replays | `word-games-cli/tests/spelling_bee_cli.rs::test_replay_menu_choices` | `e3013e7` | Pending subagent review |
+| MM-22 | `word-games-cli/src/terminal.rs::ColorMode` | `src/ui.rs` | Adapted ANSI style helpers, auto NO_COLOR detection | `word-games-cli/tests/spelling_bee_cli.rs::test_cli_play_session_batch_and_quit` | `aa168e0` | Pending subagent review |
+| MM-28 | `word-games-cli/src/spelling_bee.rs` | `src/ui.rs` | Friendly error reporting and syntax validation | `word-games-cli/tests/spelling_bee_cli.rs::test_cli_play_session_batch_syntax_error_rejects_line` | `aa168e0` | Pending subagent review |
+| MM-29 | `word-games-cli/src/replay.rs::prompt_replay` | `src/ui.rs` | Adapted replay menu with clean EOF handling | `word-games-cli/tests/spelling_bee_cli.rs::test_replay_menu_choices` | `e3013e7` | Pending subagent review |
+| MM-T5 | `word-games-cli/tests/spelling_bee_cli.rs` | `src/main.rs` | Subprocess CLI stdin/stdout scripted tests | `word-games-cli/tests/spelling_bee_cli.rs::test_cli_binary_subprocess_quit` | `e3013e7` | Pending subagent review |
 
 The independent reviewer must verify representative ported components directly against the sibling source and the full map against target paths/tests. Check that no source-repository files were changed, no cross-repo build dependency exists, and required Wordle behavior was not lost while maximizing reuse. Preserve existing source attribution; do not invent an upstream license or an official vocabulary source that the snapshot does not contain.

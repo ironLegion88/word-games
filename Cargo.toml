@@ -2,5 +2,7 @@
 members = [
     "trie",
     "trie-cli",
+    "spelling-bee",
+    "word-games-cli",
 ]
 resolver = "2"
