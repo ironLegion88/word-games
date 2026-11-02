@@ -1,18 +1,16 @@
 # Word Trie and Word Games in Rust
 
-> **Repository Status — Assignment 1 Complete & Verified.**
+> **Repository Status — Assignments 1, 2, and 3 Complete & Verified.**
 >
-> The `trie` core library crate and `trie-cli` interactive command-line binary crate are fully implemented, passing 100% of unit, invariant, randomized reference-model, real-dictionary regression, and end-to-end integration test suites.
+> The `trie` core library crate, `trie-cli` interactive command-line binary crate, `spelling-bee` engine, `boggle` engine, and `word-games-cli` interactive terminal launcher are fully implemented and verified. All pass 100% of unit, invariant, differential, randomized reference-model, real-dictionary regression, and end-to-end integration test suites.
 >
-> *Spelling Bee, Boggle, and then Wordle have approved designs. Their code is not implemented in this snapshot.*
->
-> The verification statements below are retained from the Assignment 1. This 2026-11-02 documentation update does not represent a new Rust test run.
+> *Wordle has an approved design as a future project extension.*
 
 ---
 
 ## 1. Project Overview
 
-This project implements a reusable, high-performance, memory-resident **Word Trie** in safe Rust. It serves as the dictionary engine for word processing applications and upcoming word games.
+This project implements a reusable, high-performance, memory-resident **Word Trie** in safe Rust. It serves as the dictionary engine for word processing applications and word games including Spelling Bee and Boggle.
 
 ### Milestones & Scope
 
@@ -20,8 +18,8 @@ This project implements a reusable, high-performance, memory-resident **Word Tri
 |---|---|---|
 | **Assignment 1** | `trie` library + `trie-cli` interactive binary: arena allocation, branch pruning, free-list reuse, compaction, file loading, batch deletion, present/absent filtering, CLI REPL | **Completed & Verified** |
 | **Assignment 2** | `spelling-bee` engine + `word-games-cli` driver: filtering (SB-S1) and trie (SB-S2) solvers, anchored generator, hints, presets | **Completed & Verified** |
-| **Assignment 3** | Boggle engine + terminal driver; two solvers and three generators | *Design approved; follows merged Spelling Bee* |
-| **Extension 1** | Wordle engine + terminal driver, adapted from Mastermind | *Design approved; follows both merged games* |
+| **Assignment 3** | `boggle` engine + `word-games-cli` driver: on-demand path DFS (BG-S1), dictionary scan (BG-S1E) and trie-guided (BG-S2) solvers; uniform (BG-G1), weighted (BG-G2), and synthetic dice (BG-G3) generators; extended scoring table (3..≥15); untimed gameplay | **Completed & Verified** |
+| **Extension 1** | Wordle engine + terminal driver, adapted from Mastermind | *Design approved; follows merged Boggle* |
 | **Future Extensions** | Rich TUI/GUI, alternative trie storage, timed Boggle | *Separate future scope* |
 
 ---
@@ -75,6 +73,47 @@ word-games/
 │   ├── DESIGN_SPECIFICATION.md        # Binding architectural specification
 │   ├── IMPLEMENTATION_PLAN.md         # Step-by-step plan & acceptance gates
 │   └── TESTING.md                     # Comprehensive testing & verification log
+├── boggle/                            # Independent Boggle engine crate
+│   ├── Cargo.toml
+│   ├── benches/
+│   │   └── algorithms.rs              # 3 benchmark studies (solvers, queries, generators)
+│   ├── src/
+│   │   ├── lib.rs                     # Public re-exports and API
+│   │   ├── board.rs                   # 4/5/6 board, 8-neighbor adjacency, Qu tile
+│   │   ├── error.rs                   # Typed error types
+│   │   ├── generation.rs              # Uniform, weighted, synthetic dice generators
+│   │   ├── path.rs                    # Independent path DFS & on-demand validator
+│   │   ├── scoring.rs                 # Checked arithmetic scoring (3..≥15)
+│   │   ├── session.rs                 # Owned BoggleSession, guesses, cached score
+│   │   └── solver.rs                  # Scan (BG-S1E) and Trie-pruned (BG-S2) solvers
+│   └── tests/
+│       ├── board.rs                   # Board dimension and adjacency tests
+│       ├── generation.rs              # Uniform, weighted, dice reproducibility tests
+│       ├── path.rs                    # Path DFS, Qu, diagonal, bit 35 tests
+│       ├── scan_solver.rs             # Scan solver baseline tests
+│       ├── scoring.rs                 # Extended score schedule & overflow tests
+│       ├── session.rs                 # Session lifecycle & invariant tests
+│       └── trie_solver.rs             # Trie solver & differential tests
+├── spelling-bee/                      # Independent Spelling Bee engine crate
+│   ├── Cargo.toml
+│   ├── benches/
+│   │   └── algorithms.rs              # SB-S1 vs SB-S2 benchmark harness
+│   ├── src/
+│   │   ├── lib.rs                     # Public re-exports
+│   │   ├── error.rs                   # Typed errors
+│   │   ├── generation.rs              # Pangram-anchored generator & presets
+│   │   ├── hints.rs                   # Hint grid & two-letter count matrix
+│   │   ├── puzzle.rs                  # 7 distinct letters & center validation
+│   │   ├── session.rs                 # Owned SpellingBeeSession & cached score
+│   │   └── solver.rs                  # Filtering (SB-S1) and trie-pruned (SB-S2) solvers
+│   └── tests/
+│       ├── calibration.rs             # Calibrated difficulty preset tests
+│       ├── differential.rs            # SB-S1 vs SB-S2 differential tests
+│       ├── filter_solver.rs           # Filter solver baseline tests
+│       ├── generation.rs              # Procedural anchored generator tests
+│       ├── puzzle.rs                  # Puzzle validation tests
+│       ├── scoring.rs                 # Scoring & pangram bonus tests
+│       └── session.rs                 # Session state & Queen Bee tests
 ├── trie/                              # Reusable library crate
 │   ├── Cargo.toml
 │   ├── src/
@@ -92,14 +131,26 @@ word-games/
 │       ├── operations.rs              # Insert, lookup, prefix, cursor tests
 │       ├── randomized.rs              # Seeded SplitMix64 reference-model tests
 │       └── regression.rs              # Real 178,691-word corpus regression
-└── trie-cli/                          # Interactive command-line executable
+├── trie-cli/                          # Interactive command-line executable
+│   ├── Cargo.toml
+│   ├── src/
+│   │   ├── main.rs                    # CLI entry point & argument handling
+│   │   ├── commands.rs                # Command enum & line parser
+│   │   └── repl.rs                    # Interactive terminal loop
+│   └── tests/
+│       └── cli.rs                     # Subprocess integration tests with piped stdin
+└── word-games-cli/                    # Shared interactive terminal launcher & driver
     ├── Cargo.toml
     ├── src/
-    │   ├── main.rs                    # CLI entry point & argument handling
-    │   ├── commands.rs                # Command enum & line parser
-    │   └── repl.rs                    # Interactive terminal loop
+    │   ├── lib.rs                     # Module exports
+    │   ├── main.rs                    # Central binary launcher
+    │   ├── boggle.rs                  # Boggle terminal driver
+    │   ├── replay.rs                  # Replay menu prompt (adapted from Mastermind)
+    │   ├── spelling_bee.rs            # Spelling Bee terminal driver
+    │   └── terminal.rs                # ANSI & plain color formatting helpers
     └── tests/
-        └── cli.rs                     # Subprocess integration tests with piped stdin
+        ├── boggle_cli.rs              # Subprocess & interactive Boggle CLI tests
+        └── spelling_bee_cli.rs        # Subprocess & interactive Spelling Bee CLI tests
 ```
 
 ---
@@ -239,7 +290,54 @@ cargo run -p word-games-cli -- spelling-bee --solver filter
 
 ---
 
-## 7. Real Dictionary Facts (Verified)
+## 7. Boggle Interactive Game (`word-games-cli -- boggle`)
+
+The `word-games-cli` crate provides an interactive terminal driver for Boggle, supporting 4x4, 5x5, and 6x6 board grids, three selectable board generation strategies (uniform, frequency-weighted, and synthetic 6-face dice), on-demand and trie-guided solvers, extended checked scoring, and clean early forfeits.
+
+### CLI Usage
+
+```bash
+# Launch interactive 4x4 game with default uniform board generation
+cargo run -p word-games-cli -- boggle
+
+# Launch 5x5 board with frequency-weighted letter generation
+cargo run -p word-games-cli -- boggle --size 5 --generator weighted
+
+# Launch 6x6 board with synthetic 6-face dice generation and fixed seed
+cargo run -p word-games-cli -- boggle --size 6 --generator dice --seed 42
+
+# Launch with fixed board fixture
+cargo run -p word-games-cli -- boggle --board "CATSDOGSQREWBIRD"
+
+# Select solver strategy (trie default, or scan baseline)
+cargo run -p word-games-cli -- boggle --solver scan
+```
+
+### In-Game Commands
+
+- Guess words directly or enter comma/space-delimited batches (e.g. `CATS, DOGS, BIRD`).
+- `/board`: Redisplay the current board grid.
+- `/guesses`: Display all currently discovered words on this board.
+- `/help`: Display game rules and scoring details.
+- `/quit`: Forfeit the round, display final score, and reveal all missed words.
+
+### Benchmarks
+
+Run the reproducible benchmark suite comparing scan vs trie solvers, query amortization traces, and generator quality distributions across sizes 4, 5, and 6:
+
+```bash
+# Quick smoke mode (3 boards per size)
+cargo bench -p boggle --bench algorithms -- --quick --suite all
+
+# Full comparative verification (100 boards per generator/size combo = 900 boards)
+cargo bench -p boggle --bench algorithms -- --full --suite all
+```
+
+Evidence reports are recorded under `docs/benchmarks/boggle/run-20261102/`.
+
+---
+
+## 8. Real Dictionary Facts (Verified)
 
 Testing against the provided `assets/dictionary.txt` verifies:
 - **Unique words:** exactly 178,691
@@ -250,14 +348,14 @@ Testing against the provided `assets/dictionary.txt` verifies:
 
 ---
 
-## 8. Next Steps and Implementation Prompts
+## 9. Next Steps and Implementation Prompts
 
-The current executable features include `trie`, `trie-cli`, `spelling-bee`, and `word-games-cli`. Prompts are sequenced in the sibling-repository layout `Assignment 3/word-games` and `Assignment 3/mastermind`:
+The current executable features include `trie`, `trie-cli`, `spelling-bee`, `boggle`, and `word-games-cli`. Prompts are sequenced in the sibling-repository layout `Assignment 3/word-games` and `Assignment 3/mastermind`:
 
 | Order | Prompt | Branch in `word-games` | Prerequisite |
 |---|---|---|---|
-| 1 | [Spelling Bee](prompts/SPELLING_BEE_AGENT_PROMPT.md) | `feat/spelling-bee` | **Completed & Verified** (pending merge) |
-| 2 | [Boggle](prompts/BOGGLE_AGENT_PROMPT.md) | `feat/boggle` | Spelling Bee reviewed and merged to `main` |
+| 1 | [Spelling Bee](prompts/SPELLING_BEE_AGENT_PROMPT.md) | `feat/spelling-bee` | **Completed & Merged** into `main` |
+| 2 | [Boggle](prompts/BOGGLE_AGENT_PROMPT.md) | `feat/boggle` | **Completed & Verified** (pending merge) |
 | 3 | [Wordle](prompts/WORDLE_AGENT_PROMPT.md) | `feat/wordle` | Both earlier games reviewed and merged to `main` |
 
 Each prompt implements a working baseline, adds and retains its alternative algorithms, runs correctness comparisons and reproducible benchmarks, and then requires a fresh subagent to review the code independently. Findings must be resolved before the game's branch merges locally into `main`. The agent then stops. Remote pushes are not part of these prompts.
