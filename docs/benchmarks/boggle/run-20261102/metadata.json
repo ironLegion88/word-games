@@ -1,0 +1,21 @@
+{
+  "run_id": "run-20261102",
+  "timestamp": "2026-11-02T20:30:00Z",
+  "toolchain": {
+    "rustc": "1.98.1",
+    "cargo": "1.98.1"
+  },
+  "dictionary": {
+    "corpus_path": "assets/dictionary.txt",
+    "sha256": "eda7bc8b86a534de8065a7d0cc091dc918d400475061749d05a5711afda12a3b",
+    "word_count": 178691
+  },
+  "generators": {
+    "uniform": "BG-G1-UNIFORM-V1",
+    "weighted": "BG-G2-WEIGHTED-V1",
+    "dice": "BG-G3-DICE-V1"
+  },
+  "mode": "full",
+  "seed": "0x5EED2026",
+  "default_retry_budget": 100
+}
