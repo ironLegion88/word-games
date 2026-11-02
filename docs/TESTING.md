@@ -1,6 +1,8 @@
 # Testing, Invariants and Verification Record
 
-**Status: ASSIGNMENT 1 VERIFIED.**
+**Status: ASSIGNMENT 1 VERIFIED in the supplied checkpoint record; new games NOT IMPLEMENTED.**
+
+**2026-11-02 documentation revision:** The dated evidence below is preserved from the uploaded repository and was not rerun during this documentation-only update. Sections 7 onward define planned game verification and must not be read as executed results.
 All automated unit, property-like invariant, seeded reference-model, real corpus regression, and end-to-end CLI subprocess tests are fully implemented and passing with zero warnings under stable Rust.
 
 ---
@@ -156,7 +158,7 @@ Measured on Windows x86_64, `rustc 1.98.1`:
   - Arena node payload: $395,185 \times 112\text{ bytes} \approx 44.26\text{ MB}$
   - Zero node heap allocation overhead (contiguous vector).
 - **Lookup Throughput:**
-  - In release mode, lookups are O(L) direct array indexed lookups taking under 20 nanoseconds per word.
+  - Lookup uses O(L) direct indexing. The earlier “under 20 nanoseconds per word” statement lacks a saved workload/harness in this snapshot and is **UNVERIFIED**; do not use it as a measured baseline. New measurements must follow `BENCHMARKS.md`.
 
 ---
 
@@ -164,4 +166,106 @@ Measured on Windows x86_64, `rustc 1.98.1`:
 
 1. **Alphabet Restriction:** The trie strictly supports English ASCII letters A-Z (case-insensitive). Accented characters, hyphens, and apostrophes are rejected as invalid per course specification.
 2. **OS Memory Reclamation:** `compact()` calls `Vec::shrink_to_fit()`, which releases excess capacity back to Rust's global memory allocator. Whether the allocator immediately releases pages to the operating system RSS depends on platform allocator behavior.
-3. **Future Games:** Spelling Bee and Boggle are prospective specifications; no game engine crates exist in this submission.
+3. **Planned Games:** Spelling Bee, Boggle and Wordle now have approved designs and dedicated prompts; no game engine crates exist in this documentation-only snapshot. Each implementation must supply new evidence and an independent subagent review.
+
+## 7. New checkpoint evidence policy — planned, not executed
+
+The sections below extend this testing document; they do not replace the dated Assignment 1 log. Every new game begins `NOT IMPLEMENTED / NOT RUN`. Once implemented, add a dated evidence block with the actual branch, base/reviewed-code/merge commits, Rust/Cargo/OS versions, data hashes, exact command outputs/counts, seeds, benchmark reports and independent reviewer report. Do not overwrite historical measurements as if they were current, reuse the old 61-test total for new code, or check off a stage merely because it is planned here.
+
+| Checkpoint | Feature branch | Required versions | Implementation / tests / comparative benchmarks / subagent review / merge |
+|---|---|---|---|
+| Spelling Bee | `feat/spelling-bee` | SB-S1, SB-S2, SB-P1/P2, SB-H1 | NOT IMPLEMENTED / NOT RUN / NOT RUN / NOT RUN / NOT MERGED |
+| Boggle | `feat/boggle` | BG-S1, BG-S1E, BG-S2, BG-G1/G2/G3 | NOT IMPLEMENTED / NOT RUN / NOT RUN / NOT RUN / NOT MERGED |
+| Wordle | `feat/wordle` | WL-F1, WL-F2 | NOT IMPLEMENTED / NOT RUN / NOT RUN / NOT RUN / NOT MERGED |
+
+For requirement IDs and acceptance, use [IMPLEMENTATION_PLAN.md sections 9–10](IMPLEMENTATION_PLAN.md); for comparison methodology use [BENCHMARKS.md](BENCHMARKS.md). These game policies supersede earlier “future only” wording about weighted/dice generation and Wordle, while preserving timers and rich TUI/GUI as later work.
+
+## 8. Spelling Bee test matrix — NOT IMPLEMENTED / NOT RUN
+
+| Layer | Cases and properties | Evidence required before merge |
+|---|---|---|
+| Puzzle validation | Exactly seven distinct A–Z letters; center belongs to set; invalid lengths/duplicates/Unicode; center-first display | Named positive/negative unit tests |
+| SB-S1 reference | Tiny hand-computed expected sets; proper prefixes not words; length 3 rejected/4 accepted; repeated letters; center/outside-letter rejection | Exact expected words, not only counts |
+| SB-S2 production | Independent allowed-edge traversal; complete equality with SB-S1 on fixed, sampled corpus and seeded random sets, all seven centers for selected sets | Sorted-set differential test with failing case/seed printed |
+| Pangrams and scoring | All seven distinct letters even with repetition; 4-letter=1, ≥5=length, +7 bonus; malformed/duplicate guesses never score | Pure scoring tables and cached-sum invariants |
+| Generation | Anchor exactly seven distinct letters; same seed/config/hash yields same puzzle; fixed center and letters; explicit min/max; finite retries; impossible/empty cases | Corpus/seed cases, exhaustion and no-eligible-anchor tests |
+| Difficulty | Saved calibration method/cases/hash; disjoint bands, tie handling, override intersection and empty-intersection rejection | Versioned measured calibration artifact and configuration tests |
+| Session | Initial empty guessed set; accepted words subset of frozen solutions; no dictionary mutation; later trie edits do not alter round; terminal submissions cannot mutate state | Snapshot and transition tests, Queen Bee only after all words |
+| Hints/rendering | Every letter×length cell and two-letter-prefix count; marginal sums; totals explicitly labelled; alphabetical three-column accepted words | Tiny exact hint tables and meaningful output assertions |
+| CLI/end-to-end | Single/batch guesses; syntactic-invalid batch changes nothing; valid batch sequential outcomes; slash commands; early missed set; score; replay; EOF; paths with spaces; ANSI/plain | Scripted adapter and compiled-binary subprocess transcripts |
+| Randomized invariants | At least three fixed seeds; thousands of accepted/rejected/duplicate submission operations on small puzzles | Cached score equals recomputation and no mutation on rejection after each operation |
+| Benchmarks | Filtering versus trie on identical puzzles; preprocessing/generation/retry costs separately | Raw samples and report, smoke run at each version milestone |
+
+Keep the full-dictionary and tiny-fixture tests complementary. Random seven-letter sets may have no solutions; they are essential solver tests even when normal generation rejects them.
+
+## 9. Boggle test matrix — NOT IMPLEMENTED / NOT RUN
+
+| Layer | Cases and properties | Evidence required before merge |
+|---|---|---|
+| Grid/adjacency | 4×4/5×5/6×6; wrong size/count; immutable tiles; neighbors 3/5/8 at corner/edge/interior; symmetry; no self/duplicate edges | Unit tests at all sizes |
+| BG-S1 paths | Horizontal/vertical/diagonal/reverse paths; illegal jumps; same cell reused versus two equal-letter cells; alternative paths; multiple starts | Hand-built exact path fixtures with independent search |
+| `Qu` | Q inputs normalize to one `Qu`; two cursor letters/one visited bit; minimum and scoring use spelled length; Q-without-U limitation | Positive/negative exact fixtures including excess Q/U confusion |
+| Visited mask/depth | Largest grid's bit 35, deep paths, backtracking restores independent branches, >15-letter custom-dictionary words | Deliberate 6×6/path and custom corpus cases |
+| BG-S1E versus BG-S2 | Full unique sorted solution equality on fixed/seeded boards; no duplicate score for multiple paths; no mutation of trie | Oracle and production implementation independence audit plus set tests |
+| Resource limits | Highly repeated boards, nonempty versus truly empty, deterministic expansion budget exhausted | Explicit failure instead of truncated/zero solution set; counters reported |
+| Scoring | Boundaries 2/3/4/5/6/7/8/9/12/13/14/15/16+, `Qu` length, checked total overflow and duplicate no-op | Pure tables, at least one realizable >15-letter word and session invariants |
+| BG-G1 | Uniform baseline and Q policy, reproducible seeds, valid tile count at each size | Deterministic and broad distribution sanity tests without brittle statistical thresholds |
+| BG-G2 | Counts derived from actual dictionary; smoothing; nonzero valid weights; stable hashes and deterministic selection | Derivation/data validation and per-size reproducibility |
+| BG-G3 | Correct die count and six valid faces each; one face per die; shuffle permutation; deterministic tables and seeds | Synthetic data provenance and derivation/selection tests at all sizes |
+| Playable selection | Finite retries; empty raw board remains representable; normal play retries; exhaustion and solver failure distinct | No infinite loop, no silent failure dropping |
+| Session/CLI | Owned snapshot; immediate feedback; comma/space/newline lists; malformed-line atomicity; no retraction; score/missed report; quit/replay/EOF | Scripted per-game and launcher sessions; immutable terminal state |
+| Differential/randomized | At least three documented seeds, many small exact dictionaries/boards plus representative full-corpus boards | Complete sets and state invariants, with full failure repro |
+| Solver benchmarks | Full scan versus trie and setup-amortized query traces | Equal fixtures, raw times/counters, failure accounting |
+| Generation benchmarks | Uniform versus weighted versus dice at all sizes | Raw and accepted-board metrics, retry/zero/failure rates and data versions |
+
+For random tests, deliberately include a restricted alphabet to create repeated-letter/backtracking pressure. Full-dictionary stress tests need documented budgets; never label an incomplete search as a complete correct result.
+
+## 10. Wordle test matrix — NOT IMPLEMENTED / NOT RUN
+
+| Layer | Cases and properties | Evidence required before merge |
+|---|---|---|
+| Input/word type | Exactly five ASCII letters; case normalization; digits/Unicode/punctuation/wrong length; ordinary text versus slash commands | Typed validation and no-panic tests |
+| Lexicon | All extracted guesses length five/sorted/unique; every answer in allowed set; nonempty curated answers; normalized override duplicates counted; invalid override all-or-nothing | Corpus integration and tiny answer-file fixtures with provenance |
+| WL-F1 baseline | Mastermind-derived markers; exact first; excess duplicates; partial assignments left to right | Complete expected arrays, not just counts |
+| WL-F2 production | Fixed remaining-frequency array, independently implemented | Complete equality with WL-F1 and independent multiset-removal oracle |
+| Exhaustive feedback | All 59,049 pairs over `{A,B,C}` at length five | Test count/cases; all complete arrays equal; no reused production oracle |
+| Random/corpus feedback | At least three fixed seeds; full alphabet and dictionary/answer pairs; `APPLE/ALLEY`, `LEVEL/EERIE`, all/no matches and duplicate traps | Seeded differential tests and aggregate Mastermind cross-check |
+| Attempts/state | Six valid guesses; invalid input consumes none; repeated valid word consumes one; history length matches attempts | Mutation assertions after every operation |
+| Terminal transitions | Correct sixth guess wins; sixth incorrect loses; no seventh evaluation; quit terminal; new round resets only round state | Transition invariants and scripted win/loss/quit fixtures |
+| Target selection/replay | Injected seed; answer always in curated list; reproducibility includes data/config; lexicon reused without trie clone | Testable selection and replay cases |
+| Feedback UI | Five cells per row, useful plain labels, ANSI reset/disabled behavior; keyboard correct > present > absent > unknown | Gray/yellow duplicates cannot downgrade prior stronger evidence |
+| CLI/end-to-end | Custom dictionary/answers; startup errors; seed; partial invalid inputs followed by valid words; replay; EOF; no unwanted game continuation | Compiled-binary scripts and current README commands |
+| Reuse audit | Every reused/adapted/excluded component is mapped to actual source and target | Source commit/hashes, updated map, adapted tests, no sibling dependency or changes |
+| Benchmarks | Both scorers on identical validated five-letter pairs; complete outputs consumed | Raw batches/report and honest spread, no assumed speedup |
+| Prior regressions | `trie-cli`, Bee and Boggle remain functional | Whole-workspace checks and previous README examples |
+
+## 11. Independent review, remediation and merged-main evidence
+
+The implementation agent must spawn a fresh reviewer subagent after the author's completion pass. This is a separate code review, not the author's self-check and not a request for a subagent to summarize author logs. Full instructions are in [IMPLEMENTATION_PLAN.md section 10](IMPLEMENTATION_PLAN.md), with an unfilled [review template](reviews/REVIEW_TEMPLATE.md).
+
+The reviewer independently reads the requirements, source, base-to-head diff, reuse map where relevant and benchmark harness/data. It runs its own formatting/check/strict-Clippy/debug-test/release-test/release-build commands, adversarial CLI probes, README examples and benchmark smoke plus representative comparisons. It reports requirement coverage and gaps, actual command results, file/line findings and reproduction. The author pauses edits during review, resolves actionable findings and asks the reviewer to recheck fixes.
+
+Required review paths, created by implementation agents only after actual review:
+
+- `docs/reviews/spelling-bee.md`
+- `docs/reviews/boggle.md`
+- `docs/reviews/wordle.md`
+
+If subagent capability is absent or required checks cannot run, mark the gate blocked and preserve the feature branch; do not claim independent verification or merge. Once clear, merge that game's branch locally with `--no-ff` into `main`, rerun required workspace checks and game/documentation/benchmark smoke, record the real merge SHA, and stop. No remote push is required.
+
+For each implemented checkpoint append the following populated evidence block without deleting the earlier sections:
+
+| Field | Actual evidence to record |
+|---|---|
+| Branch / base / reviewed code / merge commit | Exact Git values |
+| Date / toolchain / target / data and lock hashes | Observed, not inferred |
+| Required check commands and counts | PASS/FAIL/BLOCKED with actual stdout/exit summary |
+| Requirement IDs | Code + independently verified test/probe mapping |
+| Retained algorithm versions | Actual paths and exercised strategy options |
+| Comparative run | Inputs, raw samples, methodology and report path |
+| Independent review | Reviewer ID/report, reviewed code commit, findings and re-review |
+| README/documentation audit | Exact usage examples executed and corrections made |
+| Post-merge verification | Commands/results on actual merged `main` |
+| Known limitations | Precise scope and remaining caveats |
+
+Do not check a field “verified” solely because this template lists it. The documentation-only package creates no game test results, game branches, code review reports or merge commits.
