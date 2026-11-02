@@ -56,4 +56,3 @@ Compares end-to-end query trace cost on identical 4x4 boards across trace length
 | `dice` | 4x4 | 30 | 1.00 | 0.0% | 137.7 | 217.1 |
 | `dice` | 5x5 | 30 | 1.00 | 0.0% | 281.3 | 513.1 |
 | `dice` | 6x6 | 30 | 1.00 | 0.0% | 425.6 | 853.6 |
-

@@ -473,7 +473,6 @@ fn main() {
                 "| `{g}` | {sz}x{sz} | {rds} | {att:.2} | 0.0% | {w:.1} | {sc:.1} |\n"
             ));
         }
-        report.push('\n');
     }
 
     // Save REPORT.md
