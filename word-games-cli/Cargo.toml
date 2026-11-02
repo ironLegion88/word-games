@@ -9,6 +9,7 @@ description = "Interactive terminal driver and launcher for word games"
 trie = { path = "../trie" }
 spelling-bee = { path = "../spelling-bee" }
 boggle = { path = "../boggle" }
+wordle = { path = "../wordle" }
 rand = "0.8"
 
 [dev-dependencies]
