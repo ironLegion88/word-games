@@ -175,7 +175,7 @@ The sections below extend this testing document; they do not replace the dated A
 | Checkpoint | Feature branch | Required versions | Implementation / tests / comparative benchmarks / subagent review / merge |
 |---|---|---|---|
 | Spelling Bee | `feat/spelling-bee` | SB-S1, SB-S2, SB-P1/P2, SB-H1 | IMPLEMENTED / 34 new tests PASS (95 total) / 449.87x speedup (26.94 µs vs 12.12 ms) / Subagent review RESOLVED / MERGED into `main` (commit 4bcf4e7) |
-| Boggle | `feat/boggle` | BG-S1, BG-S1E, BG-S2, BG-G1/G2/G3 | IMPLEMENTED / 54 new tests PASS (149 total) / 350x–840x speedup (30–150 µs vs 37–50 ms) / Subagent review RESOLVED / MERGED into `main` |
+| Boggle | `feat/boggle` | BG-S1, BG-S1E, BG-S2, BG-G1/G2/G3 | IMPLEMENTED / 54 new tests PASS (149 total) / 350x–840x speedup (30–150 µs vs 37–50 ms) / Subagent review RESOLVED / MERGED into `main` (commit 1729cef) |
 | Wordle | `feat/wordle` | WL-F1, WL-F2 | NOT IMPLEMENTED / NOT RUN / NOT RUN / NOT RUN / NOT MERGED |
 
 For requirement IDs and acceptance, use [IMPLEMENTATION_PLAN.md sections 9–10](IMPLEMENTATION_PLAN.md); for comparison methodology use [BENCHMARKS.md](BENCHMARKS.md). These game policies supersede earlier “future only” wording about weighted/dice generation and Wordle, while preserving timers and rich TUI/GUI as later work.
