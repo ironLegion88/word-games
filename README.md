@@ -398,7 +398,7 @@ The current executable features include `trie`, `trie-cli`, `spelling-bee`, `bog
 |---|---|---|---|
 | 1 | [Spelling Bee](prompts/SPELLING_BEE_AGENT_PROMPT.md) | `feat/spelling-bee` | **Completed & Merged** into `main` |
 | 2 | [Boggle](prompts/BOGGLE_AGENT_PROMPT.md) | `feat/boggle` | **Completed & Merged** into `main` |
-| 3 | [Wordle](prompts/WORDLE_AGENT_PROMPT.md) | `feat/wordle` | **Implemented & Verified** on `feat/wordle` |
+| 3 | [Wordle](prompts/WORDLE_AGENT_PROMPT.md) | `feat/wordle` | **Completed & Merged** into `main` |
 
 Each prompt implements a working baseline, adds and retains its alternative algorithms, runs correctness comparisons and reproducible benchmarks, and then requires a fresh subagent to review the code independently. Findings must be resolved before the game's branch merges locally into `main`. The agent then stops. Remote pushes are not part of these prompts.
 

@@ -9,7 +9,8 @@
 | Repository and feature branch | `word-games` at `D:\Ashoka\Monsoon 2026\Programming Lab\Assignment 3\word-games`, branch `feat/wordle` |
 | Base/main commit | `0d3c9dcff8882101a7c0d4e3afa62d61e5a63006` (merged Boggle) |
 | Reviewed code commit | `c2f73881f9a7c846f519cd4f7d880f2c8e56287f` |
-| Remediation commits reviewed | Resolves FINDING-WL-01 and FINDING-WL-02 |
+| Remediation commit | `65e00c436b7019f2a4c1613bcda1e17dff5733f5` (resolves FINDING-WL-01, FINDING-WL-02) |
+| Local merge commit | `934b05caae70afd2bf9d777b3ae405d2b62ab5f3` (`--no-ff` into `main`) |
 | Specs/assignments and requirement IDs | `docs/DESIGN_SPECIFICATION.md` (sections 15–20, especially Section 19), `docs/IMPLEMENTATION_PLAN.md` (Stage D, sections 9.4 and 10), `docs/BENCHMARKS.md`, `docs/TESTING.md`, `docs/MASTERMIND_REUSE_MAP.md`, `prompts/WORDLE_AGENT_PROMPT.md`; Requirement IDs WL-01 through WL-12 |
 | Dictionary, answer/dice and benchmark data versions | `assets/dictionary.txt` SHA-256: `EDA7BC8B86A534DE8065A7D0CC091DC918D400475061749D05A5711AFDA12A3B` (178,691 words; 8,938 five-letter allowed guesses); Curated answers: `assets/wordle_curated_answers.txt` SHA-256: `8DBC0086DA0C351C96D4D0064D3411058277E5A8BA566C4E8296A0ADF2E73C25` (489 entries, documented in `docs/WORDLE_CURATION_PROVENANCE.md`); Benchmark run: `docs/benchmarks/wordle/run-20261102/` (Run ID: `run-20261102`, seed `0x5EED2026`) |
 | Working-tree state during review | Clean on `feat/wordle` at commit `c2f73881f9a7c846f519cd4f7d880f2c8e56287f`; author edits paused; sibling repository `mastermind` clean on `main` (`32e3020`) and completely untouched |
