@@ -4,7 +4,9 @@
 >
 > The `trie` core library crate and `trie-cli` interactive command-line binary crate are fully implemented, passing 100% of unit, invariant, randomized reference-model, real-dictionary regression, and end-to-end integration test suites.
 >
-> *Future Milestones (Spelling Bee, Boggle) remain in the planned roadmap and are not yet authorized or implemented.*
+> *Spelling Bee, Boggle, and then Wordle have approved designs. Their code is not implemented in this snapshot.*
+>
+> The verification statements below are retained from the Assignment 1. This 2026-11-02 documentation update does not represent a new Rust test run.
 
 ---
 
@@ -17,9 +19,10 @@ This project implements a reusable, high-performance, memory-resident **Word Tri
 | Milestone | Scope | Status |
 |---|---|---|
 | **Assignment 1** | `trie` library + `trie-cli` interactive binary: arena allocation, branch pruning, free-list reuse, compaction, file loading, batch deletion, present/absent filtering, CLI REPL | **Completed & Verified** |
-| **Assignment 2** | Spelling Bee puzzle engine + terminal driver | *Planned; awaiting explicit authorization* |
-| **Assignment 3** | Boggle grid solver + terminal driver | *Planned; awaiting explicit authorization* |
-| **Future Extensions** | Wordle, rich TUI/GUI, adaptive node structures | *Future roadmap; out of scope* |
+| **Assignment 2** | Spelling Bee engine + terminal driver; filtering and trie solvers | *Design approved; implement using its dedicated prompt* |
+| **Assignment 3** | Boggle engine + terminal driver; two solvers and three generators | *Design approved; follows merged Spelling Bee* |
+| **Extension 1** | Wordle engine + terminal driver, adapted from Mastermind | *Design approved; follows both merged games* |
+| **Future Extensions** | Rich TUI/GUI, alternative trie storage, timed Boggle | *Separate future scope* |
 
 ---
 
@@ -56,7 +59,7 @@ The implementation demonstrates idiomatic Rust ownership, data structures, and m
 ## 3. Workspace Layout
 
 ```text
-word-trie/
+word-games/
 ├── Cargo.toml                         # Workspace root manifest
 ├── Cargo.lock                         # Pinned dependency lockfile
 ├── README.md                          # Current project documentation
@@ -217,8 +220,27 @@ Testing against the provided `assets/dictionary.txt` verifies:
 
 ---
 
-## 7. Next Steps (Awaiting Authorization)
+## 7. Next Steps and Implementation Prompts
 
-Per project guidelines, work on subsequent game implementations is paused.
-- **Stage B (Spelling Bee):** will begin only upon explicit user instruction.
-- **Stage C (Boggle):** will begin only upon subsequent explicit instruction.
+The current executable features remain `trie` and `trie-cli`. Invoke one prompt at a time in the existing sibling-repository layout `Assignment 3/word-games` and `Assignment 3/mastermind`:
+
+| Order | Prompt | Branch in `word-games` | Prerequisite |
+|---|---|---|---|
+| 1 | [Spelling Bee](prompts/SPELLING_BEE_AGENT_PROMPT.md) | `feat/spelling-bee` | Assignment 1 baseline passes |
+| 2 | [Boggle](prompts/BOGGLE_AGENT_PROMPT.md) | `feat/boggle` | Spelling Bee reviewed and merged to `main` |
+| 3 | [Wordle](prompts/WORDLE_AGENT_PROMPT.md) | `feat/wordle` | Both earlier games reviewed and merged to `main` |
+
+Each prompt implements a working baseline, adds and retains its alternative algorithms, runs correctness comparisons and reproducible benchmarks, and then requires a fresh subagent to review the code independently. Findings must be resolved before the game's branch merges locally into `main`. The agent then stops. Remote pushes are not part of these prompts.
+
+The planned terminal entry point is `word-games-cli`, with an interactive launcher and game subcommands. These are design targets, not commands available in this snapshot. Mastermind remains independently buildable; selected code is adapted into this repository without a sibling-path runtime dependency.
+
+### Additional planning references
+
+- [Design specification](docs/DESIGN_SPECIFICATION.md): existing design plus the approved game contracts and staged algorithms.
+- [Implementation plan](docs/IMPLEMENTATION_PLAN.md): existing milestones plus Wordle, branch/merge gates, and independent review.
+- [Testing record](docs/TESTING.md): preserved Assignment 1 evidence, with new game cases explicitly marked planned.
+- [Benchmark protocol](docs/BENCHMARKS.md): version matrix, fair workloads, raw results, and interpretation requirements.
+- [Mastermind reuse map](docs/MASTERMIND_REUSE_MAP.md): source symbols, planned destinations, adaptation requirements, and verification evidence.
+- [Prompt router](AGENT_PROMPT.md): retains the original Assignment 1 prompt as an archive and points to the three new prompts.
+
+No game implementation, game benchmark execution, feature branch creation, or merge was performed by this documentation update. The implementation agents must keep this README and the existing testing record current as each stage actually lands.
