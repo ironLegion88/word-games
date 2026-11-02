@@ -22,8 +22,10 @@ pub use error::{
     BoardError, BoggleError, GenerationError, ScoringError, SessionError, SolverError,
 };
 pub use generation::{
-    generate_playable_board, generate_raw_board, generate_uniform, BoardGenerator,
-    DEFAULT_RETRY_BUDGET,
+    derive_dice_faces, derive_dictionary_weights, generate_dice, generate_playable_board,
+    generate_raw_board, generate_uniform, generate_weighted, get_dice_for_size, BoardGenerator,
+    BG_G1_VERSION, BG_G2_VERSION, BG_G2_WEIGHTS, BG_G3_VERSION, DEFAULT_RETRY_BUDGET,
+    DICTIONARY_CORPUS_SHA256,
 };
 pub use path::{
     contains_word, find_word_path, validate_on_demand, OnDemandResult, MIN_WORD_LENGTH,
