@@ -3,6 +3,14 @@
 version = 4
 
 [[package]]
+name = "boggle"
+version = "0.1.0"
+dependencies = [
+ "rand",
+ "trie",
+]
+
+[[package]]
 name = "cfg-if"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
