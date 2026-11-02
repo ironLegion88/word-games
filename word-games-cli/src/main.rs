@@ -18,6 +18,7 @@ USAGE:
 
 AVAILABLE GAMES:
     spelling-bee    Play the Spelling Bee word puzzle game
+    boggle          Play the Boggle word grid game
 
 COMMON OPTIONS:
     --dictionary <PATH>   Path to dictionary file (default: assets/dictionary.txt)
@@ -33,10 +34,20 @@ SPELLING BEE OPTIONS:
     --center <CHAR>       Force a specific central letter
     --letters <CHARS>     Set fixed 7 puzzle letters (requires 7 distinct letters)
 
+BOGGLE OPTIONS:
+    --size <4|5|6>        Grid dimension (default: 4)
+    --solver <STRATEGY>   Solver strategy: scan | trie (default: trie)
+    --generator <GEN>     Board generator: uniform | weighted | dice (default: uniform)
+    --board <CHARS>       Fixed board tiles (row-major string or spaces/newlines)
+
 EXAMPLES:
     cargo run -p word-games-cli -- spelling-bee
     cargo run -p word-games-cli -- spelling-bee --difficulty easy --seed 42
     cargo run -p word-games-cli -- spelling-bee --letters CAIMORT --center C
+    cargo run -p word-games-cli -- boggle
+    cargo run -p word-games-cli -- boggle --size 5 --generator weighted
+    cargo run -p word-games-cli -- boggle --generator dice --seed 42
+    cargo run -p word-games-cli -- boggle --board "CATSDOGSQREWBIRD"
 "#
     );
 }
@@ -57,8 +68,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match game_name.to_ascii_lowercase().as_str() {
         "spelling-bee" | "bee" => run_spelling_bee(&args[1..])?,
+        "boggle" => run_boggle(&args[1..])?,
         other => {
-            eprintln!("Unknown game '{other}'. Available games: spelling-bee");
+            eprintln!("Unknown game '{other}'. Available games: spelling-bee, boggle");
             std::process::exit(1);
         }
     }
@@ -210,6 +222,154 @@ fn run_spelling_bee(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
 
         let session = bee::SpellingBeeSession::new(puzzle, solutions);
         let completed = play_session(session, &mut reader, &mut stdout, color)?;
+
+        if !completed {
+            break;
+        }
+
+        match prompt_replay(&mut reader, &mut stdout, color)? {
+            ReplayChoice::SameSettings => continue,
+            ReplayChoice::Exit => break,
+        }
+    }
+
+    Ok(())
+}
+
+fn run_boggle(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
+    let mut dict_path = PathBuf::from("assets/dictionary.txt");
+    let mut seed: Option<u64> = None;
+    let mut color = ColorMode::Auto;
+    let mut size: usize = 4;
+    let mut solver = boggle::SolverStrategy::Trie;
+    let mut generator = boggle::BoardGenerator::Uniform;
+    let mut fixed_board: Option<String> = None;
+
+    let mut i = 0;
+    while i < args.len() {
+        match args[i].as_str() {
+            "--dictionary" => {
+                i += 1;
+                if i < args.len() {
+                    dict_path = PathBuf::from(&args[i]);
+                }
+            }
+            "--seed" => {
+                i += 1;
+                if i < args.len() {
+                    seed = Some(args[i].parse()?);
+                }
+            }
+            "--color" => {
+                i += 1;
+                if i < args.len() {
+                    color = match args[i].to_ascii_lowercase().as_str() {
+                        "always" => ColorMode::Always,
+                        "never" => ColorMode::Never,
+                        "auto" => ColorMode::Auto,
+                        other => {
+                            eprintln!(
+                                "Invalid color mode '{other}'. Options: auto | always | never"
+                            );
+                            std::process::exit(1);
+                        }
+                    };
+                }
+            }
+            "--size" => {
+                i += 1;
+                if i < args.len() {
+                    size = args[i].parse()?;
+                    if !(boggle::MIN_BOARD_SIZE..=boggle::MAX_BOARD_SIZE).contains(&size) {
+                        eprintln!("Invalid board size {size}. Supported sizes: 4, 5, 6");
+                        std::process::exit(1);
+                    }
+                }
+            }
+            "--solver" => {
+                i += 1;
+                if i < args.len() {
+                    solver = boggle::SolverStrategy::from_str_name(&args[i]).ok_or_else(|| {
+                        format!(
+                            "Unknown solver strategy '{}'. Options: scan | trie",
+                            args[i]
+                        )
+                    })?;
+                }
+            }
+            "--generator" => {
+                i += 1;
+                if i < args.len() {
+                    generator =
+                        boggle::BoardGenerator::from_str_name(&args[i]).ok_or_else(|| {
+                            format!(
+                                "Unknown generator '{}'. Options: uniform | weighted | dice",
+                                args[i]
+                            )
+                        })?;
+                }
+            }
+            "--board" | "--fixed-board" => {
+                i += 1;
+                if i < args.len() {
+                    fixed_board = Some(args[i].clone());
+                }
+            }
+            other => {
+                eprintln!("Unknown boggle option '{other}'. Type --help for usage.");
+                std::process::exit(1);
+            }
+        }
+        i += 1;
+    }
+
+    if !dict_path.exists() {
+        let alt_word_games = Path::new("word-games").join(&dict_path);
+        let alt_parent = Path::new("..").join(&dict_path);
+        if alt_word_games.exists() {
+            dict_path = alt_word_games;
+        } else if alt_parent.exists() {
+            dict_path = alt_parent;
+        } else {
+            eprintln!(
+                "Error: dictionary file not found at '{}'",
+                dict_path.display()
+            );
+            std::process::exit(1);
+        }
+    }
+
+    let trie = Trie::from_file(&dict_path)?;
+
+    use rand::SeedableRng;
+    let mut rng = match seed {
+        Some(s) => rand::rngs::StdRng::seed_from_u64(s),
+        None => rand::rngs::StdRng::from_entropy(),
+    };
+
+    let stdin = io::stdin();
+    let mut reader = BufReader::new(stdin.lock());
+    let mut stdout = io::stdout();
+
+    loop {
+        let (board, solutions) = if let Some(ref board_str) = fixed_board {
+            let b = boggle::Board::from_str_tiles(size, board_str)?;
+            let sols = boggle::solve(&b, &trie, solver)?;
+            (b, sols)
+        } else {
+            boggle::generate_playable_board(
+                size,
+                generator,
+                &trie,
+                solver,
+                &mut rng,
+                boggle::DEFAULT_RETRY_BUDGET,
+            )?
+        };
+
+        let session = boggle::BoggleSession::new(board, solutions, solver)?;
+        let completed =
+            word_games_cli::boggle::play_session(session, &mut reader, &mut stdout, color)?;
 
         if !completed {
             break;
