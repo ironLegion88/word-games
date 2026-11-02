@@ -5,6 +5,7 @@ use std::env;
 use std::io::{self, BufReader};
 use std::path::{Path, PathBuf};
 use trie::Trie;
+use word_games_cli::replay::{prompt_replay, ReplayChoice};
 use word_games_cli::spelling_bee::play_session;
 use word_games_cli::terminal::ColorMode;
 
@@ -148,10 +149,12 @@ fn run_spelling_bee(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     if !dict_path.exists() {
-        // Try fallback to word-games/assets/dictionary.txt if invoked from workspace parent
-        let alt = Path::new("word-games").join(&dict_path);
-        if alt.exists() {
-            dict_path = alt;
+        let alt_word_games = Path::new("word-games").join(&dict_path);
+        let alt_parent = Path::new("..").join(&dict_path);
+        if alt_word_games.exists() {
+            dict_path = alt_word_games;
+        } else if alt_parent.exists() {
+            dict_path = alt_parent;
         } else {
             eprintln!(
                 "Error: dictionary file not found at '{}'",
@@ -163,44 +166,60 @@ fn run_spelling_bee(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
 
     let trie = Trie::from_file(&dict_path)?;
 
-    // Build or generate puzzle
-    let (puzzle, solutions) = if let Some(letters_str) = fixed_letters {
-        let center = center_char.ok_or("fixed --letters requires explicit --center <CHAR>")?;
-        let p = bee::SpellingBeePuzzle::from_letters_and_center(&letters_str, center)?;
-        let sols = bee::solve(&p, &trie, solver);
-        (p, sols)
-    } else {
-        let index = bee::AnchorIndex::build(&trie)?;
-        let mut config = bee::GenerationConfig {
-            center_override: center_char,
-            solver_strategy: solver,
-            ..Default::default()
-        };
-        if let Some(min) = min_words {
-            config.min_words = min;
-        }
-        if let Some(max) = max_words {
-            config.max_words = max;
-        }
-        if let Some(d) = difficulty {
-            config = config.with_preset(d)?;
-        }
-
-        use rand::SeedableRng;
-        let mut rng = match seed {
-            Some(s) => rand::rngs::StdRng::seed_from_u64(s),
-            None => rand::rngs::StdRng::from_entropy(),
-        };
-
-        bee::generate_puzzle(&index, &trie, &config, &mut rng)?
+    use rand::SeedableRng;
+    let mut rng = match seed {
+        Some(s) => rand::rngs::StdRng::seed_from_u64(s),
+        None => rand::rngs::StdRng::from_entropy(),
     };
 
-    let session = bee::SpellingBeeSession::new(puzzle, solutions);
+    let index = if fixed_letters.is_none() {
+        Some(bee::AnchorIndex::build(&trie)?)
+    } else {
+        None
+    };
+
+    let mut config = bee::GenerationConfig {
+        center_override: center_char,
+        solver_strategy: solver,
+        ..Default::default()
+    };
+    if let Some(min) = min_words {
+        config.min_words = min;
+    }
+    if let Some(max) = max_words {
+        config.max_words = max;
+    }
+    if let Some(d) = difficulty {
+        config = config.with_preset(d)?;
+    }
+
     let stdin = io::stdin();
     let mut reader = BufReader::new(stdin.lock());
     let mut stdout = io::stdout();
 
-    play_session(session, &mut reader, &mut stdout, color)?;
+    loop {
+        let (puzzle, solutions) = if let Some(ref letters_str) = fixed_letters {
+            let center = center_char.ok_or("fixed --letters requires explicit --center <CHAR>")?;
+            let p = bee::SpellingBeePuzzle::from_letters_and_center(letters_str, center)?;
+            let sols = bee::solve(&p, &trie, solver);
+            (p, sols)
+        } else {
+            let idx = index.as_ref().unwrap();
+            bee::generate_puzzle(idx, &trie, &config, &mut rng)?
+        };
+
+        let session = bee::SpellingBeeSession::new(puzzle, solutions);
+        let completed = play_session(session, &mut reader, &mut stdout, color)?;
+
+        if !completed {
+            break;
+        }
+
+        match prompt_replay(&mut reader, &mut stdout, color)? {
+            ReplayChoice::SameSettings => continue,
+            ReplayChoice::Exit => break,
+        }
+    }
 
     Ok(())
 }
