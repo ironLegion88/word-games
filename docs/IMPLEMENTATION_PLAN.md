@@ -220,7 +220,7 @@ flowchart TD
 
 ---
 
-## 3. Stage B — Spelling Bee [activate with its dedicated prompt]
+## 3. Stage B — Spelling Bee [IMPLEMENTED & VERIFIED on feat/spelling-bee]
 
 ### B0. Stage transition and workspace
 

@@ -19,7 +19,7 @@ This project implements a reusable, high-performance, memory-resident **Word Tri
 | Milestone | Scope | Status |
 |---|---|---|
 | **Assignment 1** | `trie` library + `trie-cli` interactive binary: arena allocation, branch pruning, free-list reuse, compaction, file loading, batch deletion, present/absent filtering, CLI REPL | **Completed & Verified** |
-| **Assignment 2** | Spelling Bee engine + terminal driver; filtering and trie solvers | *Design approved; implement using its dedicated prompt* |
+| **Assignment 2** | `spelling-bee` engine + `word-games-cli` driver: filtering (SB-S1) and trie (SB-S2) solvers, anchored generator, hints, presets | **Completed & Verified** |
 | **Assignment 3** | Boggle engine + terminal driver; two solvers and three generators | *Design approved; follows merged Spelling Bee* |
 | **Extension 1** | Wordle engine + terminal driver, adapted from Mastermind | *Design approved; follows both merged games* |
 | **Future Extensions** | Rich TUI/GUI, alternative trie storage, timed Boggle | *Separate future scope* |
@@ -209,7 +209,37 @@ Goodbye!
 
 ---
 
-## 6. Real Dictionary Facts (Verified)
+## 6. Spelling Bee Interactive Game (`word-games-cli`)
+
+The `word-games-cli` crate provides an interactive terminal driver for Spelling Bee, supporting seeded procedural puzzle generation, custom fixed letter sets, difficulty presets, hint grids, prefix lists, and 3-column alphabetical displays.
+
+### CLI Usage
+
+```bash
+# Launch interactive game with procedurally generated anchored puzzle
+cargo run -p word-games-cli -- spelling-bee
+
+# Launch with calibrated difficulty preset and deterministic seed
+cargo run -p word-games-cli -- spelling-bee --difficulty easy --seed 42
+
+# Launch with fixed letters and designated central letter
+cargo run -p word-games-cli -- spelling-bee --letters CAIMORT --center C
+
+# Select solver strategy (trie-pruned default, or filtering baseline)
+cargo run -p word-games-cli -- spelling-bee --solver filter
+```
+
+### In-Game Commands
+
+- Guess words directly or enter comma/space-delimited batches (e.g. `ACACIA, AROMATIC, COMIC`).
+- `/help`: Display game rules and scoring details.
+- `/hints`: Display initial-letter × word-length hint grid and two-letter prefix counts.
+- `/guesses`: Display all currently discovered words sorted alphabetically in three columns.
+- `/quit`: Forfeit the round, display final score, and reveal all missed words.
+
+---
+
+## 7. Real Dictionary Facts (Verified)
 
 Testing against the provided `assets/dictionary.txt` verifies:
 - **Unique words:** exactly 178,691
@@ -220,13 +250,13 @@ Testing against the provided `assets/dictionary.txt` verifies:
 
 ---
 
-## 7. Next Steps and Implementation Prompts
+## 8. Next Steps and Implementation Prompts
 
-The current executable features remain `trie` and `trie-cli`. Invoke one prompt at a time in the existing sibling-repository layout `Assignment 3/word-games` and `Assignment 3/mastermind`:
+The current executable features include `trie`, `trie-cli`, `spelling-bee`, and `word-games-cli`. Prompts are sequenced in the sibling-repository layout `Assignment 3/word-games` and `Assignment 3/mastermind`:
 
 | Order | Prompt | Branch in `word-games` | Prerequisite |
 |---|---|---|---|
-| 1 | [Spelling Bee](prompts/SPELLING_BEE_AGENT_PROMPT.md) | `feat/spelling-bee` | Assignment 1 baseline passes |
+| 1 | [Spelling Bee](prompts/SPELLING_BEE_AGENT_PROMPT.md) | `feat/spelling-bee` | **Completed & Verified** (pending merge) |
 | 2 | [Boggle](prompts/BOGGLE_AGENT_PROMPT.md) | `feat/boggle` | Spelling Bee reviewed and merged to `main` |
 | 3 | [Wordle](prompts/WORDLE_AGENT_PROMPT.md) | `feat/wordle` | Both earlier games reviewed and merged to `main` |
 

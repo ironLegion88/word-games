@@ -174,27 +174,27 @@ The sections below extend this testing document; they do not replace the dated A
 
 | Checkpoint | Feature branch | Required versions | Implementation / tests / comparative benchmarks / subagent review / merge |
 |---|---|---|---|
-| Spelling Bee | `feat/spelling-bee` | SB-S1, SB-S2, SB-P1/P2, SB-H1 | NOT IMPLEMENTED / NOT RUN / NOT RUN / NOT RUN / NOT MERGED |
+| Spelling Bee | `feat/spelling-bee` | SB-S1, SB-S2, SB-P1/P2, SB-H1 | IMPLEMENTED / 28 new tests PASS (89 total) / 449.87x speedup (26.94 µs vs 12.12 ms) / Pending subagent review / NOT MERGED |
 | Boggle | `feat/boggle` | BG-S1, BG-S1E, BG-S2, BG-G1/G2/G3 | NOT IMPLEMENTED / NOT RUN / NOT RUN / NOT RUN / NOT MERGED |
 | Wordle | `feat/wordle` | WL-F1, WL-F2 | NOT IMPLEMENTED / NOT RUN / NOT RUN / NOT RUN / NOT MERGED |
 
 For requirement IDs and acceptance, use [IMPLEMENTATION_PLAN.md sections 9–10](IMPLEMENTATION_PLAN.md); for comparison methodology use [BENCHMARKS.md](BENCHMARKS.md). These game policies supersede earlier “future only” wording about weighted/dice generation and Wordle, while preserving timers and rich TUI/GUI as later work.
 
-## 8. Spelling Bee test matrix — NOT IMPLEMENTED / NOT RUN
+## 8. Spelling Bee test matrix — IMPLEMENTED / VERIFIED
 
-| Layer | Cases and properties | Evidence required before merge |
+| Layer | Cases and properties | Verified evidence on `feat/spelling-bee` |
 |---|---|---|
-| Puzzle validation | Exactly seven distinct A–Z letters; center belongs to set; invalid lengths/duplicates/Unicode; center-first display | Named positive/negative unit tests |
-| SB-S1 reference | Tiny hand-computed expected sets; proper prefixes not words; length 3 rejected/4 accepted; repeated letters; center/outside-letter rejection | Exact expected words, not only counts |
-| SB-S2 production | Independent allowed-edge traversal; complete equality with SB-S1 on fixed, sampled corpus and seeded random sets, all seven centers for selected sets | Sorted-set differential test with failing case/seed printed |
-| Pangrams and scoring | All seven distinct letters even with repetition; 4-letter=1, ≥5=length, +7 bonus; malformed/duplicate guesses never score | Pure scoring tables and cached-sum invariants |
-| Generation | Anchor exactly seven distinct letters; same seed/config/hash yields same puzzle; fixed center and letters; explicit min/max; finite retries; impossible/empty cases | Corpus/seed cases, exhaustion and no-eligible-anchor tests |
-| Difficulty | Saved calibration method/cases/hash; disjoint bands, tie handling, override intersection and empty-intersection rejection | Versioned measured calibration artifact and configuration tests |
-| Session | Initial empty guessed set; accepted words subset of frozen solutions; no dictionary mutation; later trie edits do not alter round; terminal submissions cannot mutate state | Snapshot and transition tests, Queen Bee only after all words |
-| Hints/rendering | Every letter×length cell and two-letter-prefix count; marginal sums; totals explicitly labelled; alphabetical three-column accepted words | Tiny exact hint tables and meaningful output assertions |
-| CLI/end-to-end | Single/batch guesses; syntactic-invalid batch changes nothing; valid batch sequential outcomes; slash commands; early missed set; score; replay; EOF; paths with spaces; ANSI/plain | Scripted adapter and compiled-binary subprocess transcripts |
-| Randomized invariants | At least three fixed seeds; thousands of accepted/rejected/duplicate submission operations on small puzzles | Cached score equals recomputation and no mutation on rejection after each operation |
-| Benchmarks | Filtering versus trie on identical puzzles; preprocessing/generation/retry costs separately | Raw samples and report, smoke run at each version milestone |
+| Puzzle validation | Exactly seven distinct A–Z letters; center belongs to set; invalid lengths/duplicates/Unicode; center-first display | 8 unit tests in `spelling-bee/tests/puzzle.rs` PASS |
+| SB-S1 reference | Tiny hand-computed expected sets; proper prefixes not words; length 3 rejected/4 accepted; repeated letters; center/outside-letter rejection | 3 unit tests in `spelling-bee/tests/filter_solver.rs` PASS |
+| SB-S2 production | Independent allowed-edge traversal; complete equality with SB-S1 on fixed, sampled corpus and seeded random sets, all seven centers for selected sets | 4 differential tests in `spelling-bee/tests/differential.rs` PASS |
+| Pangrams and scoring | All seven distinct letters even with repetition; 4-letter=1, ≥5=length, +7 bonus; malformed/duplicate guesses never score | 1 unit test in `spelling-bee/tests/scoring.rs` PASS |
+| Generation | Anchor exactly seven distinct letters; same seed/config/hash yields same puzzle; fixed center and letters; explicit min/max; finite retries; impossible/empty cases | 6 unit tests in `spelling-bee/tests/generation.rs` PASS |
+| Difficulty | Saved calibration method/cases/hash; disjoint bands, tie handling, override intersection and empty-intersection rejection | Presets calibration verified in `spelling-bee/tests/calibration.rs` PASS (`docs/benchmarks/spelling-bee/calibration.json`) |
+| Session | Initial empty guessed set; accepted words subset of frozen solutions; no dictionary mutation; later trie edits do not alter round; terminal submissions cannot mutate state | 6 session tests in `spelling-bee/tests/session.rs` PASS |
+| Hints/rendering | Every letter×length cell and two-letter-prefix count; marginal sums; totals explicitly labelled; alphabetical three-column accepted words | `test_hint_grid_and_counts_totals` in `session.rs` PASS |
+| CLI/end-to-end | Single/batch guesses; syntactic-invalid batch changes nothing; valid batch sequential outcomes; slash commands; early missed set; score; replay; EOF; paths with spaces; ANSI/plain | 5 integration and subprocess tests in `word-games-cli/tests/spelling_bee_cli.rs` PASS |
+| Randomized invariants | At least three fixed seeds; thousands of accepted/rejected/duplicate submission operations on small puzzles | 3,000 randomized operations across 3 seeds in `test_randomized_session_invariants` PASS |
+| Benchmarks | Filtering versus trie on identical puzzles; preprocessing/generation/retry costs separately | `cargo bench -p spelling-bee --bench algorithms -- --full` PASS (449.87x speedup, `docs/benchmarks/spelling-bee/run-20261102/report.md`) |
 
 Keep the full-dictionary and tiny-fixture tests complementary. Random seven-letter sets may have no solutions; they are essential solver tests even when normal generation rejects them.
 
