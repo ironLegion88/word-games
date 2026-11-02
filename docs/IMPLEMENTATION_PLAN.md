@@ -261,7 +261,7 @@ Before starting, re-open `Spelling Bee.pdf`, confirm approval, read current docs
 
 ---
 
-## 4. Stage C — Boggle [activate only after Spelling Bee is merged]
+## 4. Stage C — Boggle [IMPLEMENTED & VERIFIED on feat/boggle]
 
 ### C0. Read source and transition
 

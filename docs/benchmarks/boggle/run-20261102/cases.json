@@ -1,0 +1,16 @@
+{
+  "study1": {
+    "sizes": [4, 5, 6],
+    "algorithms": ["solve_scan (BG-S1E)", "solve_trie (BG-S2)"]
+  },
+  "study2": {
+    "trace_lengths": [1, 10, 100, 1000],
+    "algorithms": ["on_demand_path (BG-S1)", "trie_snapshot (BG-S2)"]
+  },
+  "study3": {
+    "generators": ["uniform", "weighted", "dice"],
+    "sizes": [4, 5, 6],
+    "raw_boards_per_combination": 100,
+    "total_raw_boards": 900
+  }
+}

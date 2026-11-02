@@ -174,8 +174,8 @@ The sections below extend this testing document; they do not replace the dated A
 
 | Checkpoint | Feature branch | Required versions | Implementation / tests / comparative benchmarks / subagent review / merge |
 |---|---|---|---|
-| Spelling Bee | `feat/spelling-bee` | SB-S1, SB-S2, SB-P1/P2, SB-H1 | IMPLEMENTED / 34 new tests PASS (95 total) / 449.87x speedup (26.94 µs vs 12.12 ms) / Pending subagent review / NOT MERGED |
-| Boggle | `feat/boggle` | BG-S1, BG-S1E, BG-S2, BG-G1/G2/G3 | NOT IMPLEMENTED / NOT RUN / NOT RUN / NOT RUN / NOT MERGED |
+| Spelling Bee | `feat/spelling-bee` | SB-S1, SB-S2, SB-P1/P2, SB-H1 | IMPLEMENTED / 34 new tests PASS (95 total) / 449.87x speedup (26.94 µs vs 12.12 ms) / Subagent review RESOLVED / MERGED into `main` (commit 4bcf4e7) |
+| Boggle | `feat/boggle` | BG-S1, BG-S1E, BG-S2, BG-G1/G2/G3 | IMPLEMENTED / 54 new tests PASS (149 total) / 350x–840x speedup (30–150 µs vs 37–50 ms) / Subagent review RESOLVED / MERGED into `main` |
 | Wordle | `feat/wordle` | WL-F1, WL-F2 | NOT IMPLEMENTED / NOT RUN / NOT RUN / NOT RUN / NOT MERGED |
 
 For requirement IDs and acceptance, use [IMPLEMENTATION_PLAN.md sections 9–10](IMPLEMENTATION_PLAN.md); for comparison methodology use [BENCHMARKS.md](BENCHMARKS.md). These game policies supersede earlier “future only” wording about weighted/dice generation and Wordle, while preserving timers and rich TUI/GUI as later work.
@@ -198,25 +198,25 @@ For requirement IDs and acceptance, use [IMPLEMENTATION_PLAN.md sections 9–10]
 
 Keep the full-dictionary and tiny-fixture tests complementary. Random seven-letter sets may have no solutions; they are essential solver tests even when normal generation rejects them.
 
-## 9. Boggle test matrix — NOT IMPLEMENTED / NOT RUN
+## 9. Boggle test matrix — IMPLEMENTED / VERIFIED
 
-| Layer | Cases and properties | Evidence required before merge |
+| Layer | Cases and properties | Verified evidence on `feat/boggle` |
 |---|---|---|
-| Grid/adjacency | 4×4/5×5/6×6; wrong size/count; immutable tiles; neighbors 3/5/8 at corner/edge/interior; symmetry; no self/duplicate edges | Unit tests at all sizes |
-| BG-S1 paths | Horizontal/vertical/diagonal/reverse paths; illegal jumps; same cell reused versus two equal-letter cells; alternative paths; multiple starts | Hand-built exact path fixtures with independent search |
-| `Qu` | Q inputs normalize to one `Qu`; two cursor letters/one visited bit; minimum and scoring use spelled length; Q-without-U limitation | Positive/negative exact fixtures including excess Q/U confusion |
-| Visited mask/depth | Largest grid's bit 35, deep paths, backtracking restores independent branches, >15-letter custom-dictionary words | Deliberate 6×6/path and custom corpus cases |
-| BG-S1E versus BG-S2 | Full unique sorted solution equality on fixed/seeded boards; no duplicate score for multiple paths; no mutation of trie | Oracle and production implementation independence audit plus set tests |
-| Resource limits | Highly repeated boards, nonempty versus truly empty, deterministic expansion budget exhausted | Explicit failure instead of truncated/zero solution set; counters reported |
-| Scoring | Boundaries 2/3/4/5/6/7/8/9/12/13/14/15/16+, `Qu` length, checked total overflow and duplicate no-op | Pure tables, at least one realizable >15-letter word and session invariants |
-| BG-G1 | Uniform baseline and Q policy, reproducible seeds, valid tile count at each size | Deterministic and broad distribution sanity tests without brittle statistical thresholds |
-| BG-G2 | Counts derived from actual dictionary; smoothing; nonzero valid weights; stable hashes and deterministic selection | Derivation/data validation and per-size reproducibility |
-| BG-G3 | Correct die count and six valid faces each; one face per die; shuffle permutation; deterministic tables and seeds | Synthetic data provenance and derivation/selection tests at all sizes |
-| Playable selection | Finite retries; empty raw board remains representable; normal play retries; exhaustion and solver failure distinct | No infinite loop, no silent failure dropping |
-| Session/CLI | Owned snapshot; immediate feedback; comma/space/newline lists; malformed-line atomicity; no retraction; score/missed report; quit/replay/EOF | Scripted per-game and launcher sessions; immutable terminal state |
-| Differential/randomized | At least three documented seeds, many small exact dictionaries/boards plus representative full-corpus boards | Complete sets and state invariants, with full failure repro |
-| Solver benchmarks | Full scan versus trie and setup-amortized query traces | Equal fixtures, raw times/counters, failure accounting |
-| Generation benchmarks | Uniform versus weighted versus dice at all sizes | Raw and accepted-board metrics, retry/zero/failure rates and data versions |
+| Grid/adjacency | 4×4/5×5/6×6; wrong size/count; immutable tiles; neighbors 3/5/8 at corner/edge/interior; symmetry; no self/duplicate edges | 8 unit tests in `boggle/tests/board.rs` PASS |
+| BG-S1 paths | Horizontal/vertical/diagonal/reverse paths; illegal jumps; same cell reused versus two equal-letter cells; alternative paths; multiple starts | 11 unit tests in `boggle/tests/path.rs` PASS |
+| `Qu` | Q inputs normalize to one `Qu`; two cursor letters/one visited bit; minimum and scoring use spelled length; Q-without-U limitation | `test_tile_qu_normalization` and `test_qu_tile_advances_two_letters_one_cell` PASS |
+| Visited mask/depth | Largest grid's bit 35, deep paths, backtracking restores independent branches, >15-letter custom-dictionary words | `test_bit_35_coverage_on_6x6_board` and `test_bit_35_path_on_6x6_board` PASS |
+| BG-S1E versus BG-S2 | Full unique sorted solution equality on fixed/seeded boards; no duplicate score for multiple paths; no mutation of trie | `boggle/tests/scan_solver.rs` (3 tests) and `boggle/tests/trie_solver.rs` (6 tests) PASS |
+| Resource limits | Highly repeated boards, nonempty versus truly empty, deterministic expansion budget exhausted | `test_search_limit_exceeded_error` PASS (explicit `SearchLimitExceeded` error) |
+| Scoring | Boundaries 2/3/4/5/6/7/8/9/12/13/14/15/16+, `Qu` length, checked total overflow and duplicate no-op | 3 unit tests in `boggle/tests/scoring.rs` PASS (including 16-letter serpentine snake fixture) |
+| BG-G1 | Uniform baseline and Q policy, reproducible seeds, valid tile count at each size | `test_uniform_seed_reproducibility` and `test_generation_size_validation` PASS |
+| BG-G2 | Counts derived from actual dictionary; smoothing; nonzero valid weights; stable hashes and deterministic selection | `test_derive_weights_matches_versioned_constant` and `test_weighted_sampling_frequency_distribution` PASS |
+| BG-G3 | Correct die count and six valid faces each; one face per die; shuffle permutation; deterministic tables and seeds | `test_dice_properties_all_board_sizes` and `test_dice_board_generation_reproducibility` PASS |
+| Playable selection | Finite retries; empty raw board remains representable; normal play retries; exhaustion and solver failure distinct | `test_retry_exhaustion_on_empty_dictionary` and `test_playable_board_guarantees_nonempty_solutions_all_generators` PASS |
+| Session/CLI | Owned snapshot; immediate feedback; comma/space/newline lists; malformed-line atomicity; no retraction; score/missed report; quit/replay/EOF | 5 session tests in `boggle/tests/session.rs` and 6 CLI tests in `word-games-cli/tests/boggle_cli.rs` PASS |
+| Differential/randomized | At least three documented seeds (`0x5EED2026`, `0xC0FFEE`, `0xBADC0DE`), full corpus boards across sizes 4, 5, 6 | `test_differential_seeded_boards_full_corpus` PASS (100% full set equality) |
+| Solver benchmarks | Full scan versus trie and setup-amortized query traces | `cargo bench -p boggle --bench algorithms -- --full` PASS (`docs/benchmarks/boggle/run-20261102/REPORT.md`) |
+| Generation benchmarks | Uniform versus weighted versus dice at all sizes | 900 raw boards and playable selection evaluated in benchmark report PASS |
 
 For random tests, deliberately include a restricted alphabet to create repeated-letter/backtracking pressure. Full-dictionary stress tests need documented budgets; never label an incomplete search as a complete correct result.
 
@@ -248,6 +248,7 @@ The reviewer independently reads the requirements, source, base-to-head diff, re
 Required review paths, created by implementation agents only after actual review:
 
 - `docs/reviews/spelling-bee.md`
+- `docs/reviews/boggle.md`
 - `docs/reviews/boggle.md`
 - `docs/reviews/wordle.md`
 

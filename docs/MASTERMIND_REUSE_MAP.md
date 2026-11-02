@@ -91,10 +91,11 @@ For every implemented row add actual target path/symbol, source commit/hash, dis
 
 | Map ID | Actual target symbol/path | Source version | Disposition and rationale | Actual tests | Implementing commit | Independent review |
 |---|---|---|---|---|---|---|
-| MM-11 | `word-games-cli/src/replay.rs::ReplayChoice` | `src/game.rs` | Adapted menu parsing for game replays | `word-games-cli/tests/spelling_bee_cli.rs::test_replay_menu_choices` | `e3013e7` | Pending subagent review |
-| MM-22 | `word-games-cli/src/terminal.rs::ColorMode` | `src/ui.rs` | Adapted ANSI style helpers, auto NO_COLOR detection | `word-games-cli/tests/spelling_bee_cli.rs::test_cli_play_session_batch_and_quit` | `aa168e0` | Pending subagent review |
-| MM-28 | `word-games-cli/src/spelling_bee.rs` | `src/ui.rs` | Friendly error reporting and syntax validation | `word-games-cli/tests/spelling_bee_cli.rs::test_cli_play_session_batch_syntax_error_rejects_line` | `aa168e0` | Pending subagent review |
-| MM-29 | `word-games-cli/src/replay.rs::prompt_replay` | `src/ui.rs` | Adapted replay menu with clean EOF handling | `word-games-cli/tests/spelling_bee_cli.rs::test_replay_menu_choices` | `e3013e7` | Pending subagent review |
-| MM-T5 | `word-games-cli/tests/spelling_bee_cli.rs` | `src/main.rs` | Subprocess CLI stdin/stdout scripted tests | `word-games-cli/tests/spelling_bee_cli.rs::test_cli_binary_subprocess_quit` | `e3013e7` | Pending subagent review |
+| MM-11 | `word-games-cli/src/replay.rs::ReplayChoice` | `src/game.rs` | Adapted menu parsing for game replays | `word-games-cli/tests/spelling_bee_cli.rs::test_replay_menu_choices` | `e3013e7` | Reviewed in Spelling Bee review |
+| MM-14 | `boggle/src/generation.rs::generate_raw_board<R: Rng>` | `src/main.rs` | Deterministic injected RNG pattern for board generation | `boggle/tests/generation.rs::test_uniform_seed_reproducibility` | `2cb285d` | Pending subagent review |
+| MM-22 | `word-games-cli/src/terminal.rs::ColorMode` | `src/ui.rs` | Adapted ANSI style helpers, auto NO_COLOR detection | `word-games-cli/tests/boggle_cli.rs::test_boggle_cli_play_session_batch_and_quit` | `7b01546` | Pending subagent review |
+| MM-28 | `word-games-cli/src/boggle.rs` | `src/ui.rs` | Friendly error reporting and syntax validation | `word-games-cli/tests/boggle_cli.rs::test_boggle_cli_batch_syntax_error_atomicity` | `7b01546` | Pending subagent review |
+| MM-29 | `word-games-cli/src/replay.rs::prompt_replay` | `src/ui.rs` | Adapted replay menu with clean EOF handling in Boggle loop | `word-games-cli/tests/boggle_cli.rs::test_boggle_cli_subprocess_fixed_board_and_quit` | `7b01546` | Pending subagent review |
+| MM-T5 | `word-games-cli/tests/boggle_cli.rs` | `src/main.rs` | Subprocess CLI stdin/stdout scripted tests for Boggle | `word-games-cli/tests/boggle_cli.rs::test_boggle_cli_subprocess_help` | `7b01546` | Pending subagent review |
 
 The independent reviewer must verify representative ported components directly against the sibling source and the full map against target paths/tests. Check that no source-repository files were changed, no cross-repo build dependency exists, and required Wordle behavior was not lost while maximizing reuse. Preserve existing source attribution; do not invent an upstream license or an official vocabulary source that the snapshot does not contain.
