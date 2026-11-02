@@ -12,13 +12,13 @@ The source repository remains read-only and independently buildable. No shared t
 
 The uploaded archive has no Git history; no source commit is known. During implementation obtain the actual sibling source commit if available and record it along with hashes. If source files differ from this snapshot, inspect them again and update the mapping rather than blindly assuming the old behavior.
 
-| Inspected source file | SHA-256 of supplied bytes |
-|---|---|
-| `src/scoring.rs` | `40c8f2e7aecffa4cb850066ef10e8e9d8c06a60a59d07c9f3a26a1f7426c500f` |
-| `src/game.rs` | `62d256c495e7b7bf89c943d9ec4d96933fcab44d6e06c0d056e2001d402215e8` |
-| `src/main.rs` | `ed32e94ac3b74a507d1baa044d73adb7217658596ca00a5a2694f44ab2a5b298` |
-| `src/ui.rs` | `97fd8bd3582c3ebdeb34fc67c04661d26aa270c9cddeeca86922c3b72aebef06` |
-| `src/config.rs` | `87561de460061c080a962e205d54c94aca6bc45e3864cfa9038eee3ea6939644` |
+| Inspected source file | SHA-256 of supplied bytes | Sibling `main` at `32e3020` SHA-256 |
+|---|---|---|
+| `src/scoring.rs` | `40c8f2e7aecffa4cb850066ef10e8e9d8c06a60a59d07c9f3a26a1f7426c500f` | `578c1ae28c25176bb2bc4111105eda1d9b79d1cbf9ebb975a2ae2bc01e5a06b4` |
+| `src/game.rs` | `62d256c495e7b7bf89c943d9ec4d96933fcab44d6e06c0d056e2001d402215e8` | `c97e37303fdde8c31fa76d2bb7cc53455ac07a480db2b98d6bd336bd60a7a9ac` |
+| `src/main.rs` | `ed32e94ac3b74a507d1baa044d73adb7217658596ca00a5a2694f44ab2a5b298` | `cbc49afd165aa8303cc1756ca43e71382d855f77b3d164d7a0977d0672d41ca4` |
+| `src/ui.rs` | `97fd8bd3582c3ebdeb34fc67c04661d26aa270c9cddeeca86922c3b72aebef06` | `5174d2b8bb61ce040cb8ff00bb6867fe86cf6053a50209d896dcc6800b4a328a` |
+| `src/config.rs` | `87561de460061c080a962e205d54c94aca6bc45e3864cfa9038eee3ea6939644` | `b6c862b8cc68c0beb6e36c78a55d82c7d184b366f2f51227c290fbda63368ef8` |
 
 ## 2. Algorithm and session components
 
@@ -91,11 +91,40 @@ For every implemented row add actual target path/symbol, source commit/hash, dis
 
 | Map ID | Actual target symbol/path | Source version | Disposition and rationale | Actual tests | Implementing commit | Independent review |
 |---|---|---|---|---|---|---|
-| MM-11 | `word-games-cli/src/replay.rs::ReplayChoice` | `src/game.rs` | Adapted menu parsing for game replays | `word-games-cli/tests/spelling_bee_cli.rs::test_replay_menu_choices` | `e3013e7` | Reviewed in Spelling Bee review |
-| MM-14 | `boggle/src/generation.rs::generate_raw_board<R: Rng>` | `src/main.rs` | Deterministic injected RNG pattern for board generation | `boggle/tests/generation.rs::test_uniform_seed_reproducibility` | `2cb285d` | Pending subagent review |
-| MM-22 | `word-games-cli/src/terminal.rs::ColorMode` | `src/ui.rs` | Adapted ANSI style helpers, auto NO_COLOR detection | `word-games-cli/tests/boggle_cli.rs::test_boggle_cli_play_session_batch_and_quit` | `7b01546` | Pending subagent review |
-| MM-28 | `word-games-cli/src/boggle.rs` | `src/ui.rs` | Friendly error reporting and syntax validation | `word-games-cli/tests/boggle_cli.rs::test_boggle_cli_batch_syntax_error_atomicity` | `7b01546` | Pending subagent review |
-| MM-29 | `word-games-cli/src/replay.rs::prompt_replay` | `src/ui.rs` | Adapted replay menu with clean EOF handling in Boggle loop | `word-games-cli/tests/boggle_cli.rs::test_boggle_cli_subprocess_fixed_board_and_quit` | `7b01546` | Pending subagent review |
-| MM-T5 | `word-games-cli/tests/boggle_cli.rs` | `src/main.rs` | Subprocess CLI stdin/stdout scripted tests for Boggle | `word-games-cli/tests/boggle_cli.rs::test_boggle_cli_subprocess_help` | `7b01546` | Pending subagent review |
+| MM-01 | `wordle/src/feedback.rs::evaluate_markers` | `src/scoring.rs` (`578c1ae`) | Adapted Mastermind two-pass exact-first matching logic into full positional array `[LetterFeedback; 5]` | `wordle/tests/feedback.rs::test_known_table_cases`, `test_exhaustive_59049_pairs_over_abc` | `feat/wordle` | Pending subagent review |
+| MM-02 | `wordle/src/feedback.rs` `target_used`/`guess_used` | `src/scoring.rs` (`578c1ae`) | Replaced dynamic heap vectors with fixed stack `[bool; 5]` arrays | `wordle/tests/feedback.rs::test_duplicate_trap_level_eerie` | `feat/wordle` | Pending subagent review |
+| MM-03 | *Excluded from Wordle* | `src/scoring.rs` (`578c1ae`) | Deliberately excluded: Wordle has no numeric difficulty point formulas | Verified no point multipliers in Wordle API | `feat/wordle` | Pending subagent review |
+| MM-04 | *Excluded from Wordle* | `src/scoring.rs` (`578c1ae`) | Deliberately excluded: Wordle uses attempt count and win/loss status | Verified API has no ScoreBreakdown | `feat/wordle` | Pending subagent review |
+| MM-05 | `wordle/src/session.rs::WordleGame` | `src/game.rs` (`c97e373`) | Adapted session lifecycle; made secret/history/counters private with terminal guard | `wordle/tests/session.rs::test_game_session_initial_state` | `feat/wordle` | Pending subagent review |
+| MM-06 | `wordle/src/session.rs::WordleGame::new` | `src/game.rs` (`c97e373`) | Replaced panicking `assert_eq!` with fallible validated `Result<Self, WordleError>` | `wordle/tests/session.rs::test_game_session_initial_state` | `feat/wordle` | Pending subagent review |
+| MM-07 | `wordle/src/session.rs::attempts_remaining` | `src/game.rs` (`c97e373`) | Adapted remaining attempt calculation (`6 - attempts_used`) | `wordle/tests/session.rs::test_repeated_valid_guess_consumes_turn` | `feat/wordle` | Pending subagent review |
+| MM-08 | `wordle/src/session.rs::submit_guess` | `src/game.rs` (`c97e373`) | Adapted evaluation sequence with terminal guard, win-before-loss on 6th attempt, and zero turn consumption on error | `wordle/tests/session.rs::test_final_sixth_attempt_win_evaluated_first` | `feat/wordle` | Pending subagent review |
+| MM-09 | `wordle/src/session.rs::WordleGuessEvaluation` | `src/game.rs` (`c97e373`) | Retained guess and attempt index; replaced bulls/cows with positional `Feedback` | `wordle/tests/session.rs::test_repeated_valid_guess_consumes_turn` | `feat/wordle` | Pending subagent review |
+| MM-10 | `wordle/src/session.rs::WordleStatus` | `src/game.rs` (`c97e373`) | Adapted outcome enum: InProgress, Won, Lost, Quit; secret private until finished | `wordle/tests/session.rs::test_voluntary_quit_reveals_secret_and_blocks_further_play` | `feat/wordle` | Pending subagent review |
+| MM-11 | `word-games-cli/src/replay.rs::ReplayChoice` | `src/game.rs` (`c97e373`) | Adapted menu parsing for game replays | `word-games-cli/tests/spelling_bee_cli.rs::test_replay_menu_choices` | `e3013e7` | Reviewed in Spelling Bee review |
+| MM-12 | `wordle/src/error.rs::WordleError` | `src/game.rs` (`c97e373`) | Design reuse of typed friendly error formatting | `wordle/tests/word.rs::test_word_parse_invalid_characters` | `feat/wordle` | Pending subagent review |
+| MM-13 | `wordle/src/word.rs::Word::parse` | `src/game.rs` (`c97e373`) | Adapted input parsing to validate 5 uppercase ASCII letters | `wordle/tests/word.rs::test_word_parse_valid_lowercase_uppercase_mixed` | `feat/wordle` | Pending subagent review |
+| MM-14 | `wordle/src/session.rs::WordleGame::with_rng` | `src/main.rs` (`cbc49af`) | Deterministic injected RNG pattern for answer selection | `wordle/tests/session.rs::test_seeded_rng_selection_and_replay_reset` | `feat/wordle` | Pending subagent review |
+| MM-15 | *Excluded from Wordle* | `src/game.rs` (`c97e373`) | Deliberately excluded: numeric target generation replaced by curated answer subset | `wordle/tests/lexicon.rs::test_lexicon_from_trie_and_curated_bundled` | `feat/wordle` | Pending subagent review |
+| MM-16 | *Excluded from Wordle* | `src/config.rs` (`b6c862b`) | Deliberately excluded: fixed 5 letters / 6 attempts, no numeric difficulty levels | Verified Wordle configuration is fixed 5/6 | `feat/wordle` | Pending subagent review |
+| MM-17 | `word-games-cli/src/wordle.rs::play_session` | `src/main.rs` (`cbc49af`) | Adapted buffered `BufRead`/`Write` loop with prompt flushing and clean EOF | `word-games-cli/tests/wordle_cli.rs::test_wordle_cli_play_session_commands_and_quit` | `feat/wordle` | Pending subagent review |
+| MM-18 | *Excluded from Wordle* | `src/main.rs` (`cbc49af`) | Deliberately excluded: Wordle has no numeric difficulty menu; CLI options used | Verified word-games-cli usage | `feat/wordle` | Pending subagent review |
+| MM-19 | `word-games-cli/src/replay.rs::prompt_replay` | `src/main.rs` (`cbc49af`) | Adapted replay menu prompt helper reused across Bee, Boggle, Wordle | `word-games-cli/tests/wordle_cli.rs::test_wordle_cli_subprocess_play_and_quit` | `feat/wordle` | Pending subagent review |
+| MM-20 | `word-games-cli/src/main.rs::run_wordle` | `src/main.rs` (`cbc49af`) | Design reuse for session lifecycle coordination and color injection | `word-games-cli/tests/wordle_cli.rs::test_wordle_cli_subprocess_play_and_quit` | `feat/wordle` | Pending subagent review |
+| MM-21 | `word-games-cli/src/main.rs` | `src/main.rs` (`cbc49af`) | Adapted production CLI launcher entry point | `word-games-cli/tests/wordle_cli.rs::test_wordle_cli_subprocess_help` | `feat/wordle` | Pending subagent review |
+| MM-22 | `word-games-cli/src/terminal.rs::ColorMode` | `src/ui.rs` (`5174d2b`) | Adapted ANSI style helpers, auto NO_COLOR detection | `word-games-cli/tests/boggle_cli.rs::test_boggle_cli_play_session_batch_and_quit` | `7b01546` | Pending subagent review |
+| MM-23 | *Excluded from Wordle* | `src/ui.rs` (`5174d2b`) | Deliberately excluded: attempt count `[Attempt N/6]` used instead of progress bar | Verified CLI rendering output | `feat/wordle` | Pending subagent review |
+| MM-24 | `word-games-cli/src/wordle.rs` banner | `src/ui.rs` (`5174d2b`) | Adapted banner formatting and command instructions | `word-games-cli/tests/wordle_cli.rs::test_wordle_cli_play_session_commands_and_quit` | `feat/wordle` | Pending subagent review |
+| MM-25 | `word-games-cli/src/wordle.rs` status prompt | `src/ui.rs` (`5174d2b`) | Adapted status prompt displaying attempt index and keyboard state | `word-games-cli/tests/wordle_cli.rs::test_wordle_cli_play_session_commands_and_quit` | `feat/wordle` | Pending subagent review |
+| MM-26 | `word-games-cli/src/wordle.rs::print_evaluation_row` | `src/ui.rs` (`5174d2b`) | Adapted row feedback presentation: colored cells and plain tags `[..C.C]` | `word-games-cli/tests/wordle_cli.rs::test_wordle_cli_play_session_commands_and_quit` | `feat/wordle` | Pending subagent review |
+| MM-27 | `word-games-cli/src/wordle.rs` summaries | `src/ui.rs` (`5174d2b`) | Adapted victory, loss, and forfeit summaries revealing secret | `word-games-cli/tests/wordle_cli.rs::test_wordle_cli_play_session_win_on_sixth_attempt` | `feat/wordle` | Pending subagent review |
+| MM-28 | `word-games-cli/src/wordle.rs` error display | `src/ui.rs` (`5174d2b`) | Friendly user error reporting on rejected input without state mutation | `word-games-cli/tests/wordle_cli.rs::test_wordle_cli_invalid_input_does_not_consume_attempt` | `feat/wordle` | Pending subagent review |
+| MM-29 | `word-games-cli/src/replay.rs::prompt_replay` | `src/ui.rs` (`5174d2b`) | Replay menu display with clean EOF handling | `word-games-cli/tests/wordle_cli.rs::test_wordle_cli_subprocess_play_and_quit` | `feat/wordle` | Pending subagent review |
+| MM-T1 | `wordle/tests/feedback.rs::test_known_table_cases` | `src/scoring.rs` (`578c1ae`) | Table-driven exact feedback tests with positional arrays | `wordle/tests/feedback.rs::test_known_table_cases` | `feat/wordle` | Pending subagent review |
+| MM-T2 | `wordle/tests/feedback.rs::test_exhaustive_59049_pairs_over_abc` | `src/scoring.rs` (`578c1ae`) | Exhaustive and seeded differential tests against independent oracle | `wordle/tests/feedback.rs::test_exhaustive_59049_pairs_over_abc` | `feat/wordle` | Pending subagent review |
+| MM-T3 | *Excluded from Wordle* | `src/scoring.rs` (`578c1ae`) | Deliberately excluded: numeric score tests not applicable to Wordle | Excluded by design | `feat/wordle` | Pending subagent review |
+| MM-T4 | `wordle/tests/session.rs` | `src/game.rs` (`c97e373`) | Session lifecycle, attempt consumption, and terminal transition tests | `wordle/tests/session.rs::test_final_sixth_attempt_win_evaluated_first` | `feat/wordle` | Pending subagent review |
+| MM-T5 | `word-games-cli/tests/wordle_cli.rs` | `src/main.rs` (`cbc49af`) | Injected `Cursor` and subprocess CLI stdin/stdout scripted tests | `word-games-cli/tests/wordle_cli.rs::test_wordle_cli_subprocess_play_and_quit` | `feat/wordle` | Pending subagent review |
+| MM-T6 | `wordle/tests/keyboard.rs` & `wordle_cli.rs` | `src/ui.rs` (`5174d2b`) | Monotonic keyboard precedence and plain-text fallback tests | `wordle/tests/keyboard.rs::test_keyboard_monotonic_precedence` | `feat/wordle` | Pending subagent review |
 
 The independent reviewer must verify representative ported components directly against the sibling source and the full map against target paths/tests. Check that no source-repository files were changed, no cross-repo build dependency exists, and required Wordle behavior was not lost while maximizing reuse. Preserve existing source attribution; do not invent an upstream license or an official vocabulary source that the snapshot does not contain.

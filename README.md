@@ -1,16 +1,14 @@
 # Word Trie and Word Games in Rust
 
-> **Repository Status — Assignments 1, 2, and 3 Complete & Verified.**
+> **Repository Status — Assignments 1, 2, 3, and Wordle Extension Complete & Verified.**
 >
-> The `trie` core library crate, `trie-cli` interactive command-line binary crate, `spelling-bee` engine, `boggle` engine, and `word-games-cli` interactive terminal launcher are fully implemented and verified. All pass 100% of unit, invariant, differential, randomized reference-model, real-dictionary regression, and end-to-end integration test suites.
->
-> *Wordle has an approved design as a future project extension.*
+> The `trie` core library crate, `trie-cli` interactive command-line binary crate, `spelling-bee` engine, `boggle` engine, `wordle` engine, and `word-games-cli` interactive terminal launcher are fully implemented and verified. All pass 100% of unit, invariant, differential, randomized reference-model, real-dictionary regression, and end-to-end integration test suites (207 total tests passing).
 
 ---
 
 ## 1. Project Overview
 
-This project implements a reusable, high-performance, memory-resident **Word Trie** in safe Rust. It serves as the dictionary engine for word processing applications and word games including Spelling Bee and Boggle.
+This project implements a reusable, high-performance, memory-resident **Word Trie** in safe Rust. It serves as the dictionary engine for word processing applications and word games including Spelling Bee, Boggle, and Wordle.
 
 ### Milestones & Scope
 
@@ -19,7 +17,7 @@ This project implements a reusable, high-performance, memory-resident **Word Tri
 | **Assignment 1** | `trie` library + `trie-cli` interactive binary: arena allocation, branch pruning, free-list reuse, compaction, file loading, batch deletion, present/absent filtering, CLI REPL | **Completed & Verified** |
 | **Assignment 2** | `spelling-bee` engine + `word-games-cli` driver: filtering (SB-S1) and trie (SB-S2) solvers, anchored generator, hints, presets | **Completed & Verified** |
 | **Assignment 3** | `boggle` engine + `word-games-cli` driver: on-demand path DFS (BG-S1), dictionary scan (BG-S1E) and trie-guided (BG-S2) solvers; uniform (BG-G1), weighted (BG-G2), and synthetic dice (BG-G3) generators; extended scoring table (3..≥15); untimed gameplay | **Completed & Verified** |
-| **Extension 1** | Wordle engine + terminal driver, adapted from Mastermind | *Design approved; follows merged Boggle* |
+| **Extension 1** | `wordle` engine + `word-games-cli` driver: marker baseline (WL-F1) and 26-entry frequency table (WL-F2) positional feedback; owned lexicon; monotonic keyboard; fail-safe `--answers` override | **Completed & Verified** |
 | **Future Extensions** | Rich TUI/GUI, alternative trie storage, timed Boggle | *Separate future scope* |
 
 ---
@@ -335,6 +333,50 @@ cargo bench -p boggle --bench algorithms -- --full --suite all
 
 Evidence reports are recorded under `docs/benchmarks/boggle/run-20261102/`.
 
+### 7.3 Wordle CLI
+
+Launch an interactive Wordle session:
+
+```bash
+# Launch interactive game with default dictionary and curated answer subset
+cargo run -p word-games-cli -- wordle
+
+# Launch with deterministic random seed and marker-based feedback (WL-F1 baseline)
+cargo run -p word-games-cli -- wordle --seed 42 --feedback marker
+
+# Launch with 26-entry frequency feedback (WL-F2 production default)
+cargo run -p word-games-cli -- wordle --seed 42 --feedback frequency
+
+# Launch with custom validated answer override file
+cargo run -p word-games-cli -- wordle --answers assets/wordle_curated_answers.txt
+
+# Launch in plain text mode (no ANSI escape codes)
+cargo run -p word-games-cli -- wordle --color never
+```
+
+#### In-Game Commands
+- Enter single 5-letter word guesses.
+- Malformed words or non-dictionary entries report friendly errors without consuming attempts.
+- Repeated valid guesses consume an attempt and reproduce feedback.
+- `/keyboard`: Redisplay the monotonic 3-row QWERTY keyboard status.
+- `/history`: Redisplay past evaluated guess rows.
+- `/help`: Display game rules and scoring details.
+- `/quit`: Forfeit the round, display attempts used, and reveal the secret word.
+
+#### Benchmarks
+
+Run the reproducible benchmark suite comparing WL-F1 (marker matching) and WL-F2 (26-entry frequency counter) across 7 strata:
+
+```bash
+# Quick smoke mode
+cargo bench -p wordle --bench algorithms -- --quick
+
+# Full comparative verification (30 batches x 1000 pairs = 30,000 evaluations per stratum)
+cargo bench -p wordle --bench algorithms -- --full
+```
+
+Evidence reports are recorded under `docs/benchmarks/wordle/run-20261102/`.
+
 ---
 
 ## 8. Real Dictionary Facts (Verified)
@@ -350,25 +392,25 @@ Testing against the provided `assets/dictionary.txt` verifies:
 
 ## 9. Next Steps and Implementation Prompts
 
-The current executable features include `trie`, `trie-cli`, `spelling-bee`, `boggle`, and `word-games-cli`. Prompts are sequenced in the sibling-repository layout `Assignment 3/word-games` and `Assignment 3/mastermind`:
+The current executable features include `trie`, `trie-cli`, `spelling-bee`, `boggle`, `wordle`, and `word-games-cli`. Prompts are sequenced in the sibling-repository layout `Assignment 3/word-games` and `Assignment 3/mastermind`:
 
 | Order | Prompt | Branch in `word-games` | Prerequisite |
 |---|---|---|---|
 | 1 | [Spelling Bee](prompts/SPELLING_BEE_AGENT_PROMPT.md) | `feat/spelling-bee` | **Completed & Merged** into `main` |
 | 2 | [Boggle](prompts/BOGGLE_AGENT_PROMPT.md) | `feat/boggle` | **Completed & Merged** into `main` |
-| 3 | [Wordle](prompts/WORDLE_AGENT_PROMPT.md) | `feat/wordle` | Both earlier games reviewed and merged to `main` |
+| 3 | [Wordle](prompts/WORDLE_AGENT_PROMPT.md) | `feat/wordle` | **Implemented & Verified** on `feat/wordle` |
 
 Each prompt implements a working baseline, adds and retains its alternative algorithms, runs correctness comparisons and reproducible benchmarks, and then requires a fresh subagent to review the code independently. Findings must be resolved before the game's branch merges locally into `main`. The agent then stops. Remote pushes are not part of these prompts.
 
-The terminal entry point is `word-games-cli`, providing an interactive launcher and the implemented `spelling-bee` and `boggle` game subcommands (with Wordle planned for its subsequent milestone). Mastermind remains independently buildable; selected code is adapted into this repository without a sibling-path runtime dependency.
+The terminal entry point is `word-games-cli`, providing an interactive launcher and the implemented `spelling-bee`, `boggle`, and `wordle` game subcommands. Mastermind remains independently buildable; selected code is adapted into this repository without a sibling-path runtime dependency.
 
 ### Additional planning references
 
 - [Design specification](docs/DESIGN_SPECIFICATION.md): existing design plus the approved game contracts and staged algorithms.
 - [Implementation plan](docs/IMPLEMENTATION_PLAN.md): existing milestones plus Wordle, branch/merge gates, and independent review.
-- [Testing record](docs/TESTING.md): preserved Assignment 1 evidence, with new game cases explicitly marked planned.
+- [Testing record](docs/TESTING.md): preserved Assignment 1 evidence, with game cases and verified test results.
 - [Benchmark protocol](docs/BENCHMARKS.md): version matrix, fair workloads, raw results, and interpretation requirements.
 - [Mastermind reuse map](docs/MASTERMIND_REUSE_MAP.md): source symbols, planned destinations, adaptation requirements, and verification evidence.
 - [Prompt router](AGENT_PROMPT.md): retains the original Assignment 1 prompt as an archive and points to the three new prompts.
 
-Spelling Bee and Boggle implementations, benchmarks, tests, and reviews are completed in this repository. Wordle remains planned as the next milestone.
+Spelling Bee, Boggle, and Wordle implementations, benchmarks, tests, and reviews are completed in this repository.
