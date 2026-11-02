@@ -10,13 +10,13 @@
 
 | Stratum | WL-F1 Marker (ns/op) | WL-F2 Freq (ns/op) | Ratio (WL-F1 / WL-F2) | Position Equality |
 |---|---|---|---|---|
-| `all_matches` | 10.14 ± 2.45 | 10.86 ± 3.81 | 0.93x | 100% (Identical) |
-| `no_matches` | 12.04 ± 3.13 | 13.25 ± 5.27 | 0.91x | 100% (Identical) |
-| `exact_partial_mixed` | 14.09 ± 0.43 | 9.79 ± 0.46 | 1.44x | 100% (Identical) |
-| `repeated_target_letters` | 16.68 ± 1.01 | 9.25 ± 1.28 | 1.80x | 100% (Identical) |
-| `repeated_guess_letters` | 18.40 ± 1.54 | 15.57 ± 7.27 | 1.18x | 100% (Identical) |
-| `excess_occurrences` | 21.30 ± 10.75 | 17.02 ± 12.38 | 1.25x | 100% (Identical) |
-| `corpus_random_pairs` | 35.32 ± 9.31 | 31.25 ± 8.45 | 1.13x | 100% (Identical) |
+| `all_matches` | 6.91 ± 1.79 | 6.46 ± 1.26 | 1.07x | 100% (Identical) |
+| `no_matches` | 9.60 ± 0.04 | 9.79 ± 0.60 | 0.98x | 100% (Identical) |
+| `exact_partial_mixed` | 13.13 ± 0.76 | 9.27 ± 0.14 | 1.42x | 100% (Identical) |
+| `repeated_target_letters` | 15.81 ± 0.46 | 8.86 ± 1.01 | 1.78x | 100% (Identical) |
+| `repeated_guess_letters` | 18.42 ± 4.90 | 10.37 ± 3.01 | 1.78x | 100% (Identical) |
+| `excess_occurrences` | 17.38 ± 0.61 | 9.25 ± 1.37 | 1.88x | 100% (Identical) |
+| `corpus_random_pairs` | 19.23 ± 7.68 | 12.35 ± 6.35 | 1.56x | 100% (Identical) |
 
 ## 2. Invariant & Fairness Analysis
 
