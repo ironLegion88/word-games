@@ -1,8 +1,8 @@
 # Word Trie / Word Games — Agent-Executable Implementation Plan
 
 **Purpose:** A dependency-ordered, test-first implementation runbook for a Rust agent.  
-**Current authorized scope:** **Assignment 1 ONLY** (`Word Games.pdf`: `trie` and `trie-cli`).  
-**Hard stop:** After Assignment 1 passes all acceptance gates, update/verify README and TESTING, commit, deliver report, and **wait for explicit instruction**. Stages for Spelling Bee and Boggle are prospective specifications, **not permission to start**.  
+**Current baseline:** Assignment 1 (`trie` and `trie-cli`) complete. **Approved implementation sequence:** Spelling Bee → Boggle → Wordle, one dedicated prompt and feature branch at a time.<br>
+**Hard stop:** After the invoked game passes author checks, independent subagent review, documentation verification, and its local merge to `main`, report and stop. Do not invoke the next game prompt automatically. Section 10 defines the branch/merge protocol; section 8 adds Wordle; section 9 fixes the retained algorithm versions. This is a documentation-only revision dated 2026-11-02.<br>
 **Companion authority:** [`DESIGN_SPECIFICATION.md`](DESIGN_SPECIFICATION.md). This plan gives execution order and objective proof obligations; the design spec gives representation and semantic decisions.
 
 ## 0. Agent operational contract
@@ -40,7 +40,7 @@ flowchart TD
   BG --> G3[[DOCS + TESTS + COMMIT + STOP]]
 ```
 
-## 2. Stage A — Assignment 1 (`trie` and `trie-cli`) [IMPLEMENT NOW]
+## 2. Stage A — Assignment 1 (`trie` and `trie-cli`) [COMPLETED BASELINE — retain for regression]
 
 ### A0. Preflight, repository and acceptance setup
 
@@ -220,7 +220,7 @@ flowchart TD
 
 ---
 
-## 3. Stage B — Spelling Bee [FUTURE ONLY — explicit permission required]
+## 3. Stage B — Spelling Bee [activate with its dedicated prompt]
 
 ### B0. Stage transition and workspace
 
@@ -257,11 +257,11 @@ Before starting, re-open `Spelling Bee.pdf`, confirm approval, read current docs
 - Re-run all Assignment 1 tests and new engine/CLI tests; verify from `Spelling Bee.pdf` each mandatory requirement; inspect README and TESTING **against repository** and regenerate examples/results; commit.
 - Update README primary emphasis to *currently working* trie CLI and Spelling Bee; Boggle/Wordle explicitly future.
 - Record performance comparison evidence and known limitations.
-- **STOP and wait for explicit Boggle authorization.**
+- Complete independent subagent review and remediation under section 10; merge `feat/spelling-bee` locally into `main`, verify the merge, report, and **STOP**. Boggle begins through its own prompt.
 
 ---
 
-## 4. Stage C — Boggle [FUTURE ONLY — explicit permission required]
+## 4. Stage C — Boggle [activate only after Spelling Bee is merged]
 
 ### C0. Read source and transition
 
@@ -287,20 +287,24 @@ Re-read `Boggle.pdf`, inspect current code and updated docs, verify permission, 
 ### C4. Generation, score, session, interaction
 
 - Uniform A–Z generation first; deterministic seed injection; log board seed/config for reproduction.
-- Scoring: 3–4→1, 5→2, 6→3, 7→5, 8→11, 9–12→2L, 13–14→3L, 15→4L; verify each boundary. Qu contributes two spelled letters.
+- Scoring: 3–4→1, 5→2, 6→3, 7→5, 8→11, 9–12→2L, 13–14→3L, lengths ≥15→4L; verify each boundary and a custom-dictionary word longer than 15. Qu contributes two spelled letters.
 - Immediate feedback; accept comma/space/newline-separated guesses; reject malformed; record accepted guesses irreversibly, no duplicate score, clean `/quit`, track cached score with invariant.
-- Leave timed gameplay, frequency-weighted/dice board generation, and difficulty-based timed settings for **subsequent extensions** unless separately approved.
+- Keep gameplay untimed. Implement frequency-weighted and dice-like board generation as the approved C5 increments after the uniform/core checkpoint; retain all three generators. Timers and difficulty-based timed settings remain later extensions.
 
-### C5. Optional later performance extensions (DO NOT automatically start)
+### C5. Approved generation increments and comparative benchmarks
 
-- Weighted letter distribution and dice-style generation; compare playable-word counts, reachable score, long words, vowel balance, and runtime under fixed seeds. Difficulty-based board selection with explicit, measurable targets.
-- Timer with strict deadline requires nonblocking input/thread/event architecture; no premature concurrency in untimed implementation.
+- **BG-G1:** retain uniform sampling as the baseline; map sampled Q to one `Qu` tile.
+- **BG-G2:** add selectable frequency-weighted sampling using versioned counts derived from the supplied dictionary, with source hash and derivation recorded.
+- **BG-G3:** add selectable six-face dice-like generation for 4×4, 5×5 and 6×6 boards, one draw per die followed by a shuffle. Commit reproducible synthetic dice data and its provenance; do not claim official Boggle dice.
+- At each increment, run tests, deterministic reproduction checks, and a benchmark smoke run before the next increment. Compare all generators on raw draws and separately on playable-board selection; report word counts, total possible score, word-length distribution, vowel balance, zero-word rates, retries, solver cost and failures. See `BENCHMARKS.md`.
+- Bounded regeneration of zero-solution random boards is required for normal play; explicit test boards may contain zero words. No silent partial solution sets after resource exhaustion.
+- Timed mode and difficulty-based timers remain deferred; they must not delay this untimed branch.
 
 ### C6. Assignment 3 hard checkpoint
 
 - Run entire workspace tests, randomized/differential cases, original assignment CLI/manual checks, release checks and benchmarking where applicable.
 - Re-check README/TESTING **with executed outputs and actual files**, update first-page feature list to reflect three implemented assignments and clearly separate optional future work.
-- Commit/record exact commit IDs. **STOP; do not implement Wordle/TUI/GUI without explicit authorization.**
+- Complete the independent review/remediation and local merge of `feat/boggle` under section 10, verify merged `main`, report, and **STOP**. Wordle starts only when its dedicated prompt is invoked and both prior games are merged.
 
 ---
 
@@ -332,7 +336,9 @@ flowchart LR
 - Do not make dummy commits, alter/remap prior commits, force-push, or promise CI passes without running it.
 - At checkpoint, report real commit SHAs from Git and branch, exactly as returned by the repository.
 
-## 7. Final deliverable checklist for each checkpoint
+## 7. Recorded Assignment 1 deliverable checklist
+
+The checked entries below belong to the supplied checkpoint-one record. They are not evidence that any later game has been implemented or reviewed. Use the fresh gates in section 10 for every game.
 
 - [x] Every PDF-mandated function/behavior for **the authorized assignment** exists.
 - [x] Public API has examples, documented errors and ownership semantics.
@@ -346,3 +352,185 @@ flowchart LR
 - [x] Conventional commits exist for completed work, with clean owned diff.
 - [x] Checkpoint report includes requirement→test mapping, limitations, Git commits.
 - [x] **STOP**; await explicit authorization for the next assignment.
+
+## 8. Stage D — Wordle extension [after both earlier games are merged]
+
+**Prompt:** [`../prompts/WORDLE_AGENT_PROMPT.md`](../prompts/WORDLE_AGENT_PROMPT.md). **Branch:** `feat/wordle`, created from current local `main`. This stage is an extension authorized by the user's decisions; do not attribute its rules to a supplied assignment PDF.
+
+### D0. Prerequisites and reuse inventory
+
+1. Verify the Spelling Bee and Boggle code, review reports, benchmark evidence, and completed commits are present in `main`; run the complete existing workspace baseline. A directory or branch name alone does not prove that a game was merged or passed review.
+2. Read the sibling Mastermind source, not only its design notes. Check its Git state without modifying it. Record the source commit when available and hashes of reused files in `MASTERMIND_REUSE_MAP.md`. The uploaded ZIP has no Git history, so the planning map deliberately contains no invented source SHA.
+3. Confirm that the target repository has no dependency on the sibling repository. Create the `wordle` engine and its CLI adapter only now. Reuse the terminal/replay components already added by earlier game branches.
+4. Update each planned reuse-map row to its actual destination and disposition as code is ported; copied, adapted, design-only, and deliberately unused must remain distinct.
+
+### D1. Validated words, lexicon and a minimal playable round
+
+- Add a private validated five-letter representation using existing `Letter`/normalization facilities. Public string inputs return typed validation errors; expected bad input must not panic.
+- Extract all five-letter allowed guesses from `&Trie` into a sorted unique vector. Build the separately curated answer subset and checked `--answers` override loader, including duplicate accounting. Document answer-data provenance.
+- Own this lexicon in the engine; keep secret, history, attempts and terminal state private. Permit deterministic construction for tests and injected seeded random answer selection for play.
+- Implement a minimal complete round with WL-F1 next, then retain it while adding WL-F2. No numeric-difficulty menu or score multipliers are required.
+
+### D2. WL-F1 — Mastermind-derived positional feedback baseline
+
+- Adapt the exact-matches-first marker algorithm from `mastermind/src/scoring.rs::score_guess`. Preserve one-to-one target consumption. Return one mark for every guessed position, assigning partial matches left to right.
+- Add table-driven known outcomes and the independent multiset-removal oracle before optimizing. Test duplicates in either/both words, all matches, no matches, all partial matches and excess occurrences.
+- Reuse numeric Mastermind scoring only as an aggregate cross-check; its output alone cannot prove positional correctness. Record the corresponding source-to-target test mapping.
+- Complete playable CLI feedback, normal guess validation, attempts, quit and replay using WL-F1. Compile, test, run a benchmark smoke, and commit this working baseline before D3.
+
+### D3. WL-F2 — Frequency-count optimization and retained comparison
+
+- Add a fixed 26-entry remaining-target frequency implementation. Exclude exact matches before allocating partial matches left to right. Keep WL-F1 runnable via the strategy option.
+- Exhaustively compare WL-F1, WL-F2 and the independent oracle for all `3^5 × 3^5 = 59,049` pairs; run seeded full-alphabet and real-word randomized cases. Verify aggregate Bulls/Cows equivalence separately.
+- Benchmark equivalent output arrays at length five with fixture creation and I/O outside timing. Record raw samples, batch sizes, environment, setup and the measured uncertainty; a small or absent speedup is a valid result.
+
+### D4. Session/UI integration and comprehensive verification
+
+- Six valid attempts; invalid input leaves attempts/history unchanged; repeated valid guesses consume turns. Preserve the final-attempt win rule and reject submissions after terminal state.
+- Show positional feedback and a monotonic letter-status keyboard in ANSI and plain text. Report attempts and win/loss; reveal the answer on loss/quit. EOF terminates normally.
+- Add Wordle to the existing launcher/subcommands without replacing earlier games or breaking `trie-cli`. Avoid arbitrary commands being confused with playable words; use slash commands.
+- Verify tiny answer-file fixtures, all-rejected overrides, seeded reproduction, replay without lexicon cloning per guess, malformed input, mixed case, non-ASCII, score-free win/loss summaries, and unchanged prior-game behavior.
+
+### D5. Extension checkpoint
+
+- Run all gates in section 10. Verify WL requirements below, update the existing README, TESTING and reuse map, execute both feedback benchmark modes, and obtain independent subagent review.
+- Resolve findings and re-review changed code, merge `feat/wordle` locally into `main`, verify the merge, report real SHAs/results, and stop. Do not add hard mode, daily puzzles, TUI/GUI, persistence, or additional games.
+
+## 9. Retained versions and requirements traceability
+
+### 9.1 Version milestones
+
+Use coherent commits on the same per-game branch. Each milestone below must compile, have its own meaningful correctness tests, run the relevant benchmark smoke, and leave the previous versions available at the final branch head. This is not a requirement to copy the engine into several directories or publish several crate major versions.
+
+| Game | Milestone order | Required pre-merge comparison |
+|---|---|---|
+| Bee | SB-S1 filtering → SB-S2 trie pruning → SB-P1/P2 generator/difficulty → SB-H1 hints/UI | Complete set equality, solve/setup cost, anchor preprocessing and acceptance/retries |
+| Boggle solving | BG-S1 per-word DFS → BG-S1E scan enumeration → BG-S2 trie enumeration | Complete sets on identical boards; setup plus varying query-trace lengths |
+| Boggle generation | BG-G1 uniform → BG-G2 weighted → BG-G3 dice-like | Raw and playable-selection quality across all three board sizes; same solver/seed manifests |
+| Wordle | WL-F1 marker baseline/playable round → WL-F2 frequencies → final integration | Complete feedback-array equality and real five-letter cost, not just aggregate counts |
+
+Follow [BENCHMARKS.md](BENCHMARKS.md) for fixtures, metadata, sample policies, failures and output files. Initial smoke is not a substitute for the final comparative run. No required version may be “implemented” as a wrapper around the competing algorithm. Keep common validation/scoring factored, and retain genuinely independent search/feedback paths.
+
+The original alternative-trie ladder remains a **separate deferred track**: current indexed arena baseline → boxed arrays (A) → adaptive `SmallVec` (D) → `HashMap`/`BTreeMap` variants, with identical load/lookup/churn/game workloads and memory measurements. Record it in the benchmark roadmap, but do not expand the current game's branch into that track.
+
+### 9.2 Spelling Bee acceptance IDs
+
+| ID | Required behavior | Minimum independent verification |
+|---|---|---|
+| SB-01 | Seven distinct letters, valid center, center-first display | Invalid sizes/duplicates/center; fixed and seeded cases |
+| SB-02 | Minimum four letters, repetition, allowed letters and compulsory center | Positive/negative boundary and repeated-letter fixtures |
+| SB-03 | Complete owned solutions from both retained solvers | Exact tiny expected sets and full-set differential tests |
+| SB-04 | Pangram-anchored generation, fixed-center/count controls, bounded errors | Seed/config/hash reproduction, impossible constraints, retry exhaustion |
+| SB-05 | Versioned calibrated difficulty presets | Calibration dataset/method/results and explicit override tests |
+| SB-06 | Checked cached scoring and duplicate rejection | Pure score table; randomized invariant after every guess |
+| SB-07 | Queen Bee and early-quit missed-word report | No premature finish; terminal-state immutability; complete missing set |
+| SB-08 | Three-column alphabetical words and both hint views | Rendering/order tests; every hint marginal matches total solutions |
+| SB-09 | Helpful interactive input, batch syntax, replay and EOF | Scripted subprocess sessions; plain/ANSI output; paths with spaces |
+| SB-10 | Benchmarks, accurate docs, independent review and merge | Evidence files, resolved findings, full workspace and merged-main checks |
+
+### 9.3 Boggle acceptance IDs
+
+| ID | Required behavior | Minimum independent verification |
+|---|---|---|
+| BG-01 | Valid 4/5/6 boards and immutable eight-neighbor adjacency | Shape validation, corners/edges/center, symmetry, no duplicate/self edges |
+| BG-02 | Dictionary words of ≥3 spelled letters; no cell reuse | Diagonal/reverse/multiple paths, illegal jumps, distinct equal-letter tiles |
+| BG-03 | `Qu` = two letters/one tile and documented bare-Q limit | Path, minimum-length and score fixtures; 36th-bit coverage |
+| BG-04 | BG-S1, BG-S1E and BG-S2 retained with complete results | Independent exact fixtures and full-set comparisons, no truncation on limits |
+| BG-05 | Exact extended score table and immutable evaluated guesses | Every boundary including >15; duplicates; checked cached total |
+| BG-06 | Uniform/weighted/dice generators for all board sizes | Determinism, distribution/data shape, one face per die, shuffled assignment |
+| BG-07 | Bounded zero-word regeneration and honest failures | Raw empty board versus search failure; exhaustion; fixed empty boards |
+| BG-08 | Immediate robust input, score summaries, replay/quit/EOF | Mixed delimiters, malformed-batch atomicity, no retraction, text fallback |
+| BG-09 | Solver and board-quality benchmarks | Equal fixtures, amortized query traces, raw versus accepted draws |
+| BG-10 | Docs, prior-game regressions, independent review and merge | Requirement evidence, resolved findings, full workspace and merged-main checks |
+
+### 9.4 Wordle acceptance IDs
+
+| ID | Required behavior | Minimum independent verification |
+|---|---|---|
+| WL-01 | Validated five-letter ASCII input and dictionary validation | Mixed case, punctuation/Unicode/length and absent word tests |
+| WL-02 | Allowed guesses separate from curated answers | Subset invariant, nonempty answers, provenance, fail-safe overrides |
+| WL-03 | Six valid attempts, repeats consume turns, invalid inputs do not | Attempt/history mutation checks for each rejection and repetition |
+| WL-04 | Two retained exact-first duplicate-safe positional scorers | Known arrays, 59,049 exhaustive pairs, independent oracle and random tests |
+| WL-05 | Correct final-attempt win and terminal-state guard | Win on sixth, loss after sixth, no seventh evaluation |
+| WL-06 | Seeded answer selection and replay | Same seed/config/data reproduction; reusable owned lexicon |
+| WL-07 | Letter rows and monotonic keyboard with plain fallback | No yellow/gray downgrade; excess duplicates; no ANSI in plain mode |
+| WL-08 | Quit/loss reveals, EOF, no automatic next game | Scripted round and launcher/replay sessions |
+| WL-09 | Component-by-component Mastermind reuse evidence | Actual symbols/paths, source hashes/commit, adapted tests, exceptions explained |
+| WL-10 | Both feedback algorithms benchmarked fairly | Actual five-letter complete outputs, raw samples, setup excluded/labeled |
+| WL-11 | Previous assignments remain working | Full workspace tests and examples for trie, Bee and Boggle |
+| WL-12 | Accurate docs, independent review, local merge and report | Resolved findings, recorded review scope/commit and post-merge checks |
+
+## 10. Per-game branch, independent review, and local merge protocol
+
+```mermaid
+flowchart TD
+  M["Current main and required earlier checkpoints"] --> F["Own game branch: baseline and alternative versions"]
+  F --> A["Author checks, benchmarks and documentation"]
+  A --> R{"Fresh subagent review clear?"}
+  R -->|Findings| X["Focused fixes and regression checks"]
+  X --> R
+  R -->|Yes| G["Merge reviewed game branch into main"]
+  G --> P{"Post-merge checks pass?"}
+  P -->|No| X
+  P -->|Yes| S["Report evidence and stop"]
+```
+
+### 10.1 Branch preflight
+
+1. Locate `Assignment 3/word-games` as an existing Git repository. Read applicable `AGENTS.md` files and the invoked game prompt. Locate the sibling Mastermind repository read-only. Do not initialize a replacement repository merely because the prompt was launched from the parent folder.
+2. Inspect `git status --short`, current branch, `main`, log, worktrees, and existing feature branches. Preserve unrelated changes. Do not reset, auto-stash, clean, force-switch, or stage all user changes. If the named feature branch is an existing compatible partial implementation, inspect and resume it; do not duplicate or overwrite it.
+   If this documentation overlay is newly applied but uncommitted, inspect its exact Markdown-only changes. They are authorized task files: carry them onto `feat/spelling-bee` and commit them there as a coherent documentation update before game code, while preserving unrelated user edits. Alternatively, use an already committed overlay on `main`. Do not require a separate approval just to commit the provided planning update.
+3. Start from current **local `main`**, after required earlier games are already reviewed and merged. Record the base commit, the new branch name, dictionary hash and Mastermind source state. No network fetch/pull/push is required by this workflow.
+4. Run the pre-existing baseline checks and record failures as pre-existing or introduced with evidence. Do not declare a new checkpoint complete with unresolved required failures. Fix relevant pre-existing defects on this branch only when needed, with focused tests and a documented reason.
+5. Create `feat/spelling-bee`, `feat/boggle` or `feat/wordle` from `main`. Keep all work for that game, its tests, benchmark data and docs on that branch. Use small Conventional Commits; do not work directly on `main` or edit Mastermind.
+
+### 10.2 Author completion and fresh subagent review
+
+After all required versions and game behavior are implemented, run:
+
+```bash
+cargo fmt --all -- --check
+cargo check --workspace --all-targets
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+cargo test --workspace --release
+cargo build --workspace --release
+git diff --check
+```
+
+Also run the game's full comparative benchmark suite, deterministic CLI transcripts, rustdoc examples, and every current README usage example. Review docs against actual manifests, source and output; preserve old checkpoint evidence with its date, and add a new dated/commit-scoped section. Do not reuse the inherited 61-test count as a new result.
+
+Spawn a **fresh independent reviewer subagent** after this author pass. Give it the absolute repository path, base commit, reviewed code commit, the relevant requirement IDs, exact authoritative files, and instructions below. Prefer a clean/minimal context rather than the author's whole reasoning history. Do not change the model solely for review. The author must not edit files while the reviewer reads or runs commands.
+
+The reviewer must:
+
+- Read the original assignment for Bee/Boggle, approved design additions, implementation plan, benchmark protocol, testing record, current source, and `git diff <base>...<reviewed-code-commit>`. For Wordle, read the Mastermind source and reuse map as well. Treat source and requirements as evidence, not the author's completion claim.
+- Independently run formatting, compilation, strict Clippy, debug/release tests, release build, representative CLI transcripts, documentation examples, and benchmark smoke checks. Inspect the saved full benchmark inputs/results and reproduce at least representative comparisons. Record exact commands and exit results.
+- Check algorithm independence, complete set/feedback equality, duplicate rules, ownership/snapshot semantics, terminal-state guards, corpus/answer/dice provenance, benchmark fairness and failures, scope, branch ancestry, and accurate documentation. Add adversarial reasoning and targeted manual probes beyond the existing happy-path tests.
+- Return a structured report with severity, file/line, violated requirement, reproduction, expected versus actual behavior, and remediation. Explicitly enumerate all covered requirement IDs, untested gaps and any environment blockers. “No findings” alone is insufficient evidence.
+- Work read-only except build/test outputs. Suggest focused tests or patches; the author owns implementation fixes. It must not merge, rewrite history, or certify the author's statements without its own inspection.
+
+Save the report at `docs/reviews/spelling-bee.md`, `docs/reviews/boggle.md` or `docs/reviews/wordle.md`, with the actual reviewed code SHA, base SHA, reviewer identifier, review date, commands, results, coverage and findings. Use [`reviews/REVIEW_TEMPLATE.md`](reviews/REVIEW_TEMPLATE.md); it is a template, not a completed review. If subagents are unavailable, mark `BLOCKED: independent review unavailable`, preserve the branch and report the blocker; do not relabel an author self-review as independent or merge without the required review.
+
+### 10.3 Remediation, re-review and merge
+
+1. Resolve every actionable finding. Fix correctness, assignment, data, benchmark or documentation gaps with tests and focused commits. Mark non-actionable observations with evidence and have the reviewer confirm that disposition; do not quietly waive requirements or known defects.
+2. Re-run relevant and full required checks after code changes. Ask the reviewer to re-inspect the fix commits and rerun affected checks. Any source, test, asset, dependency, executable benchmark or behavior change after review requires review of that delta. A later report-only commit may record the reviewed code SHA; do not fabricate a self-referential report commit SHA.
+3. Ensure the final README and TESTING describe the branch as it exists, the reuse map uses actual destinations, and required benchmark data/reports are present. A required skipped/blocked check is not a pass. Include the review's remediation status and remaining limitations honestly.
+4. Inspect current `main`. If it advanced during work, merge it into the feature branch without rewriting history, resolve conflicts, repeat affected checks and obtain review of resulting changes. Do not merge against an unreviewed conflict resolution.
+5. With owned changes committed and no unrelated dirty files at risk, switch to `main` and run `git merge --no-ff <game-branch>` with a Conventional Commit merge message such as `feat(spelling-bee): merge reviewed game implementation`. The user has requested these local per-game merges; do not add another confirmation gate. Do not push, delete branches, rewrite history or publish remotely as part of these prompts.
+6. On merged `main`, rerun the full required checks above, the game's benchmark smoke and CLI/documentation smoke. If a merge-specific failure appears, stop progression, repair it on the retained game branch through a reviewed corrective commit and merge again; do not reset or rewrite the merge.
+7. Report branch/base/reviewed-code/merge SHAs, requirement coverage, actual tests and benchmark comparisons, review findings and resolutions, verified README examples, and limitations. Leave `main` checked out and the game branch retained for traceability. **STOP**; the next game is a separate prompt invocation.
+
+### 10.4 Fresh completion checklist — one per game
+
+- [ ] Baseline and every required alternative algorithm remain runnable and tested.
+- [ ] Every active requirement ID maps to actual code and passing verification.
+- [ ] Fair benchmarks ran with saved metadata/raw data; failures and uncertainty are included.
+- [ ] Existing README, design, plan and TESTING were updated rather than replaced; examples were executed.
+- [ ] Mastermind reuse map is reconciled to source symbols and actual target code.
+- [ ] A fresh subagent inspected code/diff and ran independent checks.
+- [ ] Review findings were resolved and fixes re-reviewed; no required check is blocked/skipped.
+- [ ] Conventional Commits and clean owned diff; Mastermind and unrelated user files unchanged.
+- [ ] Own game branch merged locally to `main`; post-merge checks passed.
+- [ ] Final report uses real Git evidence and stops before the next game or extension.
