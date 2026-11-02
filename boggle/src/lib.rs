@@ -30,4 +30,4 @@ pub use path::{
 };
 pub use scoring::{calculate_total_score, word_score};
 pub use session::{BoggleSession, GuessOutcome, QuitSummary};
-pub use solver::{solve, solve_scan, solve_trie, SolverStrategy};
+pub use solver::{solve, solve_scan, solve_trie, solve_trie_with_limit, SolverStrategy};
