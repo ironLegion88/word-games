@@ -176,14 +176,14 @@ fn run_spelling_bee(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
             solver_strategy: solver,
             ..Default::default()
         };
-        if let Some(d) = difficulty {
-            config = config.with_preset(d);
-        }
         if let Some(min) = min_words {
             config.min_words = min;
         }
         if let Some(max) = max_words {
             config.max_words = max;
+        }
+        if let Some(d) = difficulty {
+            config = config.with_preset(d)?;
         }
 
         use rand::SeedableRng;

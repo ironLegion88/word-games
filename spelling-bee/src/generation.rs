@@ -1,4 +1,14 @@
 //! Procedural puzzle generation, anchor selection, and difficulty controls for Spelling Bee.
+//!
+//! Provides:
+//! - Pre-indexing of dictionary anchor words with exactly 7 distinct letters (SB-P1).
+//! - Bounded seeded generation with pangram guarantee.
+//! - Workload-calibrated difficulty presets (`Easy`, `Medium`, `Hard`) (SB-P2).
+//!
+//! Note on sampling bias:
+//! Anchor words are sampled uniformly from the eligible dictionary index. Because different
+//! letter sets have varying numbers of distinct 7-letter anagrams/inflections in the dictionary,
+//! letter sets with more pangrams in the dictionary are sampled proportionally more often.
 
 use crate::error::GenerationError;
 use crate::puzzle::SpellingBeePuzzle;
@@ -10,7 +20,7 @@ use trie::{Letter, Trie};
 /// Pre-indexed list of eligible anchor words containing exactly 7 distinct letters.
 #[derive(Clone, Debug)]
 pub struct AnchorIndex {
-    /// List of dictionary words that contain exactly 7 distinct letters.
+    /// Alphabetically sorted list of dictionary words that contain exactly 7 distinct letters.
     anchors: Vec<String>,
 }
 
@@ -81,6 +91,12 @@ impl AnchorIndex {
 }
 
 /// Difficulty presets representing completion workload categories.
+///
+/// Calibrated against `assets/dictionary.txt` tertiles over 256 distinct letter sets
+/// (1,792 evaluated puzzle centers):
+/// - Easy: 15..=125 solutions (lower tertile workload)
+/// - Medium: 126..=237 solutions (middle tertile workload)
+/// - Hard: 238..=600 solutions (upper tertile workload)
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum DifficultyPreset {
     Easy,
@@ -90,16 +106,11 @@ pub enum DifficultyPreset {
 
 impl DifficultyPreset {
     /// Returns the default solution count bounds (min_words, max_words) for this preset.
-    ///
-    /// Calibrated against the supplied dictionary:
-    /// - Easy: 15..=35 solutions
-    /// - Medium: 36..=70 solutions
-    /// - Hard: 71..=150 solutions
     pub fn bounds(&self) -> (usize, usize) {
         match self {
-            Self::Easy => (15, 35),
-            Self::Medium => (36, 70),
-            Self::Hard => (71, 150),
+            Self::Easy => (15, 125),
+            Self::Medium => (126, 237),
+            Self::Hard => (238, 600),
         }
     }
 
@@ -135,7 +146,7 @@ impl Default for GenerationConfig {
         Self {
             center_override: None,
             min_words: 10,
-            max_words: 250,
+            max_words: 600,
             max_retries: 250,
             preset: None,
             solver_strategy: SolverStrategy::default(),
@@ -144,13 +155,23 @@ impl Default for GenerationConfig {
 }
 
 impl GenerationConfig {
-    /// Applies a difficulty preset to the configuration, intersecting with any user bounds.
-    pub fn with_preset(mut self, preset: DifficultyPreset) -> Self {
+    /// Applies a difficulty preset to the configuration, intersecting with user bounds.
+    pub fn with_preset(mut self, preset: DifficultyPreset) -> Result<Self, GenerationError> {
         let (preset_min, preset_max) = preset.bounds();
+        let intersected_min = self.min_words.max(preset_min);
+        let intersected_max = self.max_words.min(preset_max);
+
+        if intersected_min > intersected_max {
+            return Err(GenerationError::InvalidBounds {
+                min: intersected_min,
+                max: intersected_max,
+            });
+        }
+
         self.preset = Some(preset);
-        self.min_words = self.min_words.max(preset_min);
-        self.max_words = self.max_words.min(preset_max);
-        self
+        self.min_words = intersected_min;
+        self.max_words = intersected_max;
+        Ok(self)
     }
 }
 
@@ -166,6 +187,15 @@ pub fn generate_puzzle<R: Rng>(
             min: config.min_words,
             max: config.max_words,
         });
+    }
+
+    if let Some(c) = config.center_override {
+        if !c.is_ascii_alphabetic() {
+            return Err(GenerationError::CenterNotInAnchor {
+                center: c,
+                anchor: "<non-ascii>".into(),
+            });
+        }
     }
 
     for _ in 0..config.max_retries {
@@ -210,6 +240,12 @@ pub fn generate_puzzle<R: Rng>(
         };
 
         let solutions = solve(&puzzle, trie, config.solver_strategy);
+
+        // Verify pangram constraint: at least one pangram must be present
+        let has_pangram = solutions.iter().any(|w| puzzle.is_pangram(w));
+        if !has_pangram {
+            continue;
+        }
 
         if solutions.len() >= config.min_words && solutions.len() <= config.max_words {
             return Ok((puzzle, solutions));
