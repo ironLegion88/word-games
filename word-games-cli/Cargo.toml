@@ -1,0 +1,13 @@
+[package]
+name = "word-games-cli"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ashoka University CS"]
+description = "Interactive terminal driver and launcher for word games"
+
+[dependencies]
+trie = { path = "../trie" }
+spelling-bee = { path = "../spelling-bee" }
+rand = "0.8"
+
+[dev-dependencies]
