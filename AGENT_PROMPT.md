@@ -1,3 +1,23 @@
+# Agent Prompt Router — Approved Game Sequence
+
+**Updated 2026-11-02. Assignment 1 is complete.** Use the dedicated prompt for the game being implemented:
+
+| Order | Prompt | Branch |
+|---|---|---|
+| 1 | [Spelling Bee](prompts/SPELLING_BEE_AGENT_PROMPT.md) | `feat/spelling-bee` |
+| 2 | [Boggle](prompts/BOGGLE_AGENT_PROMPT.md) | `feat/boggle` |
+| 3 | [Wordle](prompts/WORDLE_AGENT_PROMPT.md) | `feat/wordle` |
+
+The current game prompts and the 2026-11-02 additions to the existing design, plan and testing files govern new work. Each game includes retained algorithm versions, benchmarks, independent code review by a fresh subagent, remediation, and a local merge into `main` before stopping. The next prompt is a separate invocation; Wordle cannot precede either earlier game.
+
+Keep `Assignment 3/mastermind` independently buildable and unchanged. Adapt code into `Assignment 3/word-games` according to [the reuse map](docs/MASTERMIND_REUSE_MAP.md). Do not use a sibling-path dependency or include source files across repositories.
+
+## Archived Assignment 1 prompt
+
+The original prompt below is retained for historical context and the trie requirements. Its “current mission”, “future only”, and permission wording described checkpoint one; it does not override the new game prompts or approved scope. Do not run it as the current game prompt.
+
+---
+
 # Implementation-Agent Prompt — Rust Word Trie and Word Games
 
 > Copy the prompt below into your coding agent, along with this project's source PDFs, `dictionary.txt`, and the accompanying Markdown files. If the agent can inspect the repository directly, put the files in the documented paths first. **Do not authorize future stages by merely attaching their specs.**
