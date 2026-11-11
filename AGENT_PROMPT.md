@@ -1,5 +1,7 @@
 # Agent Prompt Router — Approved Game Sequence
 
+**Current repository state:** All three games and both command-line crates are implemented. The prompts below preserve the implementation sequence and assignment history. The root README describes current usage.
+
 **Updated 2026-11-02. Assignment 1 is complete.** Use the dedicated prompt for the game being implemented:
 
 | Order | Prompt | Branch |

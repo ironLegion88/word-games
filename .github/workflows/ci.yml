@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: Stable Rust on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+      - name: Check all targets
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Test workspace
+        run: cargo test --workspace --locked
+      - name: Test release build
+        run: cargo test --workspace --release --locked
+      - name: Smoke-test benchmarks
+        if: runner.os == 'Linux'
+        run: |
+          cargo bench --locked -p spelling-bee --bench algorithms -- --quick
+          cargo bench --locked -p boggle --bench algorithms -- --quick --suite all
+          cargo bench --locked -p wordle --bench algorithms -- --quick
+          git diff --exit-code -- docs/benchmarks

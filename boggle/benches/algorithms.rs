@@ -6,7 +6,7 @@
 //! 3. Uniform vs weighted vs dice-like generation across sizes 4, 5, and 6 (raw vs accepted quality).
 //!
 //! Outputs:
-//! - `docs/benchmarks/boggle/<run-id>/metadata.json`
+//! - `target/benchmarks/boggle/<run-id>/metadata.json`
 //! - `docs/benchmarks/boggle/<run-id>/cases.json`
 //! - `docs/benchmarks/boggle/<run-id>/samples.csv`
 //! - `docs/benchmarks/boggle/<run-id>/REPORT.md`
@@ -18,12 +18,15 @@
 use std::env;
 use std::fs::{self, File};
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::time::Instant;
 
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 use trie::Trie;
+
+#[path = "../../benches/support.rs"]
+mod benchmark_support;
 
 use boggle::board::Tile;
 use boggle::generation::{
@@ -49,6 +52,13 @@ fn main() {
     let run_solvers = suite_arg == "all" || suite_arg == "solvers";
     let run_queries = suite_arg == "all" || suite_arg == "queries";
     let run_generators = suite_arg == "all" || suite_arg == "generators";
+    let trace_lengths = if !run_queries {
+        Vec::new()
+    } else if is_quick {
+        vec![1, 10, 100]
+    } else {
+        vec![1, 10, 100, 1000]
+    };
 
     println!("==================================================");
     println!("        BOGGLE ALGORITHM BENCHMARK HARNESS        ");
@@ -82,9 +92,10 @@ fn main() {
     println!("Loaded {} words in {:.2?}", trie.len(), load_dur);
 
     // Prepare benchmark run output directory
-    let run_id = "run-20261102";
-    let out_dir = find_output_dir(run_id);
-    fs::create_dir_all(&out_dir).expect("failed to create benchmark output directory");
+    let run = benchmark_support::Run::new("boggle");
+    let run_id = &run.id;
+    let out_dir = &run.output_dir;
+    fs::create_dir_all(out_dir).expect("failed to create benchmark output directory");
     println!("Output directory: {}", out_dir.display());
 
     let mut samples_file = File::create(out_dir.join("samples.csv")).expect("create samples.csv");
@@ -101,7 +112,10 @@ fn main() {
         "- **Mode:** `{}`\n",
         if is_quick { "QUICK" } else { "FULL" }
     ));
-    report.push_str("- **Toolchain:** `rustc 1.98.1` / `cargo 1.98.1`\n");
+    report.push_str(&format!(
+        "- **Toolchain:** `{}` / `{}`\n",
+        run.rustc, run.cargo
+    ));
     report.push_str(&format!(
         "- **Dictionary SHA-256:** `{DICTIONARY_CORPUS_SHA256}`\n"
     ));
@@ -226,12 +240,6 @@ fn main() {
         for w in non_dict {
             sample_words.push(w.to_string());
         }
-
-        let trace_lengths = if is_quick {
-            vec![1, 10, 100]
-        } else {
-            vec![1, 10, 100, 1000]
-        };
 
         for &len in &trace_lengths {
             let mut trace = Vec::with_capacity(len);
@@ -482,11 +490,13 @@ fn main() {
     let metadata_json = format!(
         r#"{{
   "run_id": "{run_id}",
-  "timestamp": "2026-11-02T20:30:00Z",
+  "timestamp_unix_seconds": {timestamp},
   "toolchain": {{
-    "rustc": "1.98.1",
-    "cargo": "1.98.1"
+    "rustc": "{rustc}",
+    "cargo": "{cargo}"
   }},
+  "os": "{os}",
+  "architecture": "{architecture}",
   "dictionary": {{
     "corpus_path": "assets/dictionary.txt",
     "sha256": "{DICTIONARY_CORPUS_SHA256}",
@@ -502,28 +512,46 @@ fn main() {
   "default_retry_budget": {DEFAULT_RETRY_BUDGET}
 }}
 "#,
-        if is_quick { "quick" } else { "full" }
+        if is_quick { "quick" } else { "full" },
+        timestamp = run.timestamp_unix_seconds,
+        rustc = run.rustc,
+        cargo = run.cargo,
+        os = env::consts::OS,
+        architecture = env::consts::ARCH,
     );
     fs::write(out_dir.join("metadata.json"), metadata_json).expect("failed to write metadata.json");
 
     // Save cases.json
-    let cases_json = r#"{
-  "study1": {
+    let boards_per_combination = if run_generators {
+        if is_quick {
+            3
+        } else {
+            100
+        }
+    } else {
+        0
+    };
+    let cases_json = format!(
+        r#"{{
+  "selected_suite": "{suite_arg}",
+  "study1": {{
     "sizes": [4, 5, 6],
     "algorithms": ["solve_scan (BG-S1E)", "solve_trie (BG-S2)"]
-  },
-  "study2": {
-    "trace_lengths": [1, 10, 100, 1000],
+  }},
+  "study2": {{
+    "trace_lengths": {trace_lengths:?},
     "algorithms": ["on_demand_path (BG-S1)", "trie_snapshot (BG-S2)"]
-  },
-  "study3": {
+  }},
+  "study3": {{
     "generators": ["uniform", "weighted", "dice"],
     "sizes": [4, 5, 6],
-    "raw_boards_per_combination": 100,
-    "total_raw_boards": 900
-  }
-}
-"#;
+    "raw_boards_per_combination": {boards_per_combination},
+    "total_raw_boards": {total_boards}
+  }}
+}}
+"#,
+        total_boards = boards_per_combination * 9
+    );
     fs::write(out_dir.join("cases.json"), cases_json).expect("failed to write cases.json");
 
     println!("\nSaved benchmark evidence to {}:", out_dir.display());
@@ -532,19 +560,4 @@ fn main() {
     println!("  - samples.csv");
     println!("  - REPORT.md");
     println!("\nBenchmark run completed successfully.");
-}
-
-fn find_output_dir(run_id: &str) -> PathBuf {
-    let candidate_roots = [
-        Path::new("docs/benchmarks/boggle"),
-        Path::new("word-games/docs/benchmarks/boggle"),
-        Path::new("../docs/benchmarks/boggle"),
-    ];
-    let root = candidate_roots
-        .iter()
-        .find(|p| p.parent().is_some_and(|par| par.exists()))
-        .copied()
-        .unwrap_or(Path::new("docs/benchmarks/boggle"));
-
-    root.join(run_id)
 }

@@ -13,10 +13,10 @@
 //! 3. Correctness verification gate (59,049 3-letter alphabet exhaustive pairs + seeded pairs).
 //!
 //! Outputs:
-//! - `docs/benchmarks/wordle/<run-id>/metadata.json`
-//! - `docs/benchmarks/wordle/<run-id>/cases.json`
-//! - `docs/benchmarks/wordle/<run-id>/samples.csv`
-//! - `docs/benchmarks/wordle/<run-id>/REPORT.md`
+//! - `target/benchmarks/wordle/<run-id>/metadata.json`
+//! - `target/benchmarks/wordle/<run-id>/cases.json`
+//! - `target/benchmarks/wordle/<run-id>/samples.csv`
+//! - `target/benchmarks/wordle/<run-id>/REPORT.md`
 //!
 //! Usage:
 //!     cargo bench -p wordle --bench algorithms -- --quick
@@ -26,7 +26,7 @@ use std::env;
 use std::fs::{self, File};
 use std::hint::black_box;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::time::Instant;
 
 use rand::rngs::StdRng;
@@ -37,26 +37,10 @@ use wordle::feedback::{evaluate_frequency, evaluate_markers, Feedback};
 use wordle::lexicon::WordleLexicon;
 use wordle::word::Word;
 
-const BENCHMARK_SEED: u64 = 0x5EED_2026;
+#[path = "../../benches/support.rs"]
+mod benchmark_support;
 
-fn find_output_dir(run_id: &str) -> PathBuf {
-    let candidates = [
-        PathBuf::from(format!("docs/benchmarks/wordle/{run_id}")),
-        PathBuf::from(format!("word-games/docs/benchmarks/wordle/{run_id}")),
-        PathBuf::from(format!("../docs/benchmarks/wordle/{run_id}")),
-        PathBuf::from(format!("../../docs/benchmarks/wordle/{run_id}")),
-    ];
-    for p in &candidates {
-        if let Some(parent) = p.parent() {
-            if let Some(grandparent) = parent.parent() {
-                if grandparent.exists() {
-                    return p.clone();
-                }
-            }
-        }
-    }
-    PathBuf::from(format!("docs/benchmarks/wordle/{run_id}"))
-}
+const BENCHMARK_SEED: u64 = 0x5EED_2026;
 
 #[derive(Clone, Debug)]
 struct BenchmarkStratum {
@@ -241,9 +225,10 @@ fn main() {
         lexicon.curated_answers().len()
     );
 
-    let run_id = "run-20261102";
-    let out_dir = find_output_dir(run_id);
-    fs::create_dir_all(&out_dir).expect("failed to create output directory");
+    let run = benchmark_support::Run::new("wordle");
+    let run_id = &run.id;
+    let out_dir = &run.output_dir;
+    fs::create_dir_all(out_dir).expect("failed to create output directory");
     println!("Output directory: {}", out_dir.display());
 
     let mut rng = StdRng::seed_from_u64(BENCHMARK_SEED);
@@ -377,7 +362,10 @@ fn main() {
   "benchmark": "wordle_feedback_algorithms",
   "run_id": "{run_id}",
   "mode": "{}",
-  "timestamp_utc": "2026-11-02T16:20:00Z",
+  "timestamp_unix_seconds": {timestamp},
+  "toolchain": {{ "rustc": "{rustc}", "cargo": "{cargo}" }},
+  "os": "{os}",
+  "architecture": "{architecture}",
   "seed": "0x5EED2026",
   "batches_per_stratum": {batches_per_stratum},
   "pairs_per_batch": {pairs_per_batch},
@@ -390,7 +378,12 @@ fn main() {
   "answers_sha256": "8DBC0086DA0C351C96D4D0064D3411058277E5A8BA566C4E8296A0ADF2E73C25"
 }}
 "#,
-        if is_quick { "quick" } else { "full" }
+        if is_quick { "quick" } else { "full" },
+        timestamp = run.timestamp_unix_seconds,
+        rustc = run.rustc,
+        cargo = run.cargo,
+        os = env::consts::OS,
+        architecture = env::consts::ARCH,
     );
     fs::write(out_dir.join("metadata.json"), metadata_json).expect("write metadata.json");
 
@@ -399,6 +392,10 @@ fn main() {
     report.push_str("# Wordle Feedback Algorithm Comparative Benchmark Report\n\n");
     report.push_str(&format!("- **Run ID:** `{run_id}`\n"));
     report.push_str(&format!(
+        "- **Toolchain:** `{}` / `{}`\n",
+        run.rustc, run.cargo
+    ));
+    report.push_str(&format!(
         "- **Profile Mode:** {}\n",
         if is_quick {
             "Quick Smoke"
@@ -406,7 +403,10 @@ fn main() {
             "Full Verification"
         }
     ));
-    report.push_str("- **Execution Date:** 2026-11-02 (UTC)\n");
+    report.push_str(&format!(
+        "- **Timestamp (Unix seconds):** {}\n",
+        run.timestamp_unix_seconds
+    ));
     report.push_str("- **Benchmark Seed:** `0x5EED2026`\n");
     report.push_str(&format!("- **Batches per Stratum:** {batches_per_stratum} batches ({pairs_per_batch} pairs/batch)\n\n"));
 
@@ -433,7 +433,7 @@ fn main() {
     report.push_str("1. **Identical Input & Output Contract:** Both algorithms accept identical validated `Word` references and produce full `[LetterFeedback; 5]` arrays.\n");
     report.push_str("2. **Zero Heap Allocation:** WL-F1 replaces Mastermind's `Vec<bool>` with stack `[bool; 5]`. WL-F2 uses stack `[u8; 26]`. Neither allocates heap memory inside the evaluation kernel.\n");
     report.push_str("3. **100% Agreement:** All test pairs across all strata produce identical positional feedback arrays.\n");
-    report.push_str("4. **Real Five-Letter Cost:** At length 5, both algorithms execute in the 5–25 nanosecond range. The frequency counter provides predictable $O(L + 26)$ performance across all duplicate letter distributions.\n");
+    report.push_str("4. **Timing interpretation:** The table reports measured means and sample standard deviations for this run. Small differences should be interpreted alongside their spread and the recorded workload.\n");
 
     fs::write(out_dir.join("REPORT.md"), report).expect("write REPORT.md");
     println!(

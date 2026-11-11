@@ -1,7 +1,7 @@
 # Word Trie / Word Games — Agent-Executable Implementation Plan
 
 **Purpose:** A dependency-ordered, test-first implementation runbook for a Rust agent.  
-**Current baseline:** Assignment 1 (`trie` and `trie-cli`) complete. **Approved implementation sequence:** Spelling Bee → Boggle → Wordle, one dedicated prompt and feature branch at a time.<br>
+**Current state:** All six workspace crates are implemented. The original sequence was trie → Spelling Bee → Boggle → Wordle. This document preserves the checkpoint plan and its proof obligations; use [the README](../README.md) for current usage.<br>
 **Hard stop:** After the invoked game passes author checks, independent subagent review, documentation verification, and its local merge to `main`, report and stop. Do not invoke the next game prompt automatically. Section 10 defines the branch/merge protocol; section 8 adds Wordle; section 9 fixes the retained algorithm versions. This is a documentation-only revision dated 2026-11-02.<br>
 **Companion authority:** [`DESIGN_SPECIFICATION.md`](DESIGN_SPECIFICATION.md). This plan gives execution order and objective proof obligations; the design spec gives representation and semantic decisions.
 

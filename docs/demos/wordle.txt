@@ -1,0 +1,38 @@
+Captured CLI session
+Command: cargo run --release --locked -p word-games-cli -- wordle --seed 42 --color always
+Input: SLATE, MIXED, 2
+Captured UTC: 2026-11-11T00:52:13Z
+
+
+========================================
+                 WORDLE
+========================================
+Guess the 5-letter secret word in 6 valid attempts.
+Feedback: C / Green = Correct, P / Yellow = Present, . / Gray = Absent
+Commands: /help (instructions), /keyboard (letter status), /history (past guesses), /quit (forfeit)
+
+Keyboard Status:
+  Q W E R T Y U I O P
+   A S D F G H J K L
+     Z X C V B N M
+
+[Attempt 1/6] Enter 5-letter guess: SLATE
+  [1/6]   S  L  A  T  E    [....P]
+
+Keyboard Status:
+  Q W E? R T. Y U I O P
+   A. S. D F G H J K L.
+     Z X C V B N M
+
+[Attempt 2/6] Enter 5-letter guess: MIXED
+  [2/6]   M  I  X  E  D    [CCCCC]
+
+========================================
+                 VICTORY!
+========================================
+Magnificent! Solved the puzzle in 2/6 attempts!
+
+What would you like to do next?
+  [1] Play another round with same settings
+  [2] Exit
+Choice [1-2]: 2

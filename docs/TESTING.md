@@ -1,9 +1,8 @@
 # Testing, Invariants and Verification Record
 
-**Status: ASSIGNMENT 1 VERIFIED in the supplied checkpoint record; new games NOT IMPLEMENTED.**
+**Current state:** All six workspace crates and all three games are implemented. The suite covers unit tests, invariants, seeded reference models, the supplied dictionary, CLI subprocesses, and a doctest. Game-specific coverage appears in sections 7–10.
 
-**2026-11-02 documentation revision:** The dated evidence below is preserved from the uploaded repository and was not rerun during this documentation-only update. Sections 7 onward define planned game verification and must not be read as executed results.
-All automated unit, property-like invariant, seeded reference-model, real corpus regression, and end-to-end CLI subprocess tests are fully implemented and passing with zero warnings under stable Rust.
+The dated checkpoint evidence below records earlier verification stages. The latest workspace verification is recorded at the end of this document.
 
 ---
 
@@ -269,3 +268,27 @@ For each implemented checkpoint append the following populated evidence block wi
 | Known limitations | Precise scope and remaining caveats |
 
 Do not check a field “verified” solely because this template lists it. The documentation-only package creates no game test results, game branches, code review reports or merge commits.
+
+
+## 12. Repository presentation verification — 2026-11-11
+
+The presentation update was checked locally on Linux x86_64 with `rustc 1.99.1 (58cf8f9c3 2026-10-13)` and `cargo 1.99.1 (5f94df478 2026-08-27)`. These observations apply to this checkout and environment. The CI workflow also configures a Windows runner.
+
+| Check | Observed result |
+| --- | --- |
+| `cargo fmt --all -- --check` | Passed |
+| `cargo check --workspace --locked` | Passed |
+| `cargo clippy --workspace --all-targets --locked -- -D warnings` | Passed |
+| `cargo test --workspace --locked` | 207 passed, including one doctest |
+| `cargo test --workspace --release --locked` | 207 passed, including one doctest |
+| `cargo build --workspace --release --locked` | Passed |
+| Spelling Bee, Boggle, and Wordle `--quick` benchmarks | Passed; comparison gates reported equal outputs |
+| Repeated Boggle/Wordle runs | Created distinct output directories under `target/benchmarks/` |
+| Benchmark metadata | Parsed as JSON; observed compiler, Cargo, timestamp, OS, and architecture matched the host |
+| Archived benchmark records | `git diff --exit-code -- docs/benchmarks` passed after the smoke runs |
+| README launch examples | Wordle, easy Spelling Bee, dice Boggle, and dictionary REPL passed through `cargo run` |
+| CLI probes | A seeded Wordle win, fixed-board Boggle guesses, and Spelling Bee validation passed |
+
+The terminal image in the README is an excerpt of a captured CLI session. Its full transcript and reproduction command are in [demos/wordle.txt](demos/wordle.txt). The seeded target was `MIXED`; `SLATE` followed by `MIXED` produced a win in two attempts.
+
+The dictionary fixture was checked against SHA-256 `eda7bc8b86a534de8065a7d0cc091dc918d400475061749d05a5711afda12a3b`. The benchmark smoke tests exercise the public commands and their output behavior. They establish command and equality checks for those inputs, while performance conclusions require the larger workload and environment context described in [BENCHMARKS.md](BENCHMARKS.md).

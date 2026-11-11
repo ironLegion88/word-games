@@ -1,8 +1,7 @@
 # Word Trie and Word Games — Architecture & Design Specification
 
-**Status:** Approved design; Assignment 1 (`trie` + `trie-cli`) fully implemented and verified.<br>
-**First required release checkpoint:** Assignment 1, **Word Games** (`trie` + `trie-cli`) only — **COMPLETED**.<br>
-**Approved subsequent checkpoints (code not yet implemented):** Spelling Bee, Boggle, then Wordle as a project extension. Dedicated prompts activate one game at a time. Rich TUI/GUI applications remain future scope.
+**Current state:** The trie, both command-line crates, Spelling Bee, Boggle, and Wordle are implemented. See [the README](../README.md) for the current entry points and [TESTING.md](TESTING.md) for verification records.<br>
+**Checkpoint history:** The sections below retain the original assignment sequence and its stage-specific requirements. The game contracts begin at section 15. Rich TUI/GUI applications remain future scope.
 **Scope revision:** 2026-11-02; additive game contracts begin at section 15. Earlier trie design and checkpoint history are retained.
 **Authority:** The three supplied PDFs (`Word Games.pdf`, `Spelling Bee.pdf`, `Boggle.pdf`), the supplied `dictionary.txt`, and the user's recorded design decisions. Where this document goes beyond the PDFs, it is explicitly a project design decision.
 

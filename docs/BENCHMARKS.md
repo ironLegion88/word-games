@@ -1,6 +1,18 @@
 # Algorithm Versions and Reproducible Benchmarks
 
-**Status — 2026-11-02:** Protocol and planned workloads only. The new games, alternative algorithms, calibration outputs and game measurements are **NOT IMPLEMENTED / NOT RUN** in this documentation update. Existing checkpoint-one observations remain in [TESTING.md](TESTING.md), with their original provenance. Do not promote its unsupported sub-20-ns lookup statement into a baseline.
+**Current state:** All three game crates contain runnable stable Rust benchmark harnesses. Archived reports and raw samples are linked below. The later sections preserve the measurement protocol and workload definitions used during development.
+
+## Running and reading the benchmarks
+
+Run the commands in section 2 from the repository root. Spelling Bee prints an aggregate summary. Boggle and Wordle create a unique `target/benchmarks/<game>/run-<timestamp>-<process-id>/` directory for every invocation. Their metadata records the observed compiler and Cargo versions, Unix timestamp, OS, architecture, and selected mode. The Boggle case summary also records the selected suite and actual generator workload size.
+
+The archived `run-20261102` reports remain available as recorded observations:
+
+- [Spelling Bee summary](benchmarks/spelling-bee/run-20261102/report.md).
+- [Boggle report](benchmarks/boggle/run-20261102/REPORT.md), [samples](benchmarks/boggle/run-20261102/samples.csv), and [metadata](benchmarks/boggle/run-20261102/metadata.json).
+- [Wordle report](benchmarks/wordle/run-20261102/REPORT.md), [samples](benchmarks/wordle/run-20261102/samples.csv), and [metadata](benchmarks/wordle/run-20261102/metadata.json).
+
+The harnesses check equal outputs on shared inputs before timing. Spelling Bee reports an aggregate mean, Boggle reports aggregate board/query results, and Wordle reports per-stratum means and sample standard deviations. The protocol below sets additional requirements for interpreting and extending these studies. Keep conclusions scoped to the actual recorded workload and environment.
 
 ## 1. Purpose and retained versions
 
@@ -21,7 +33,7 @@ An alternative must have an independent implementation of the work being compare
 
 Use stable Rust benchmark executables under each engine's `benches/algorithms.rs`, configured with `harness = false`. Do not require nightly `#[bench]`. Minimize dependencies; a small `Instant`/`black_box` driver is adequate when its limitations are documented. A well-justified existing framework can be retained if already present, with matching commands updated everywhere.
 
-The implementation target commands are:
+The current commands are:
 
 ```bash
 cargo bench -p spelling-bee --bench algorithms -- --quick
@@ -32,9 +44,9 @@ cargo bench -p wordle --bench algorithms -- --quick
 cargo bench -p wordle --bench algorithms -- --full
 ```
 
-These commands become runnable only after the relevant branch implements the harness. `--quick` is a deterministic smoke test; `--full` is the required pre-merge comparison. Document any actual CLI adjustment consistently rather than leaving broken commands in the README or review instructions.
+`--quick` runs the smaller smoke workload. `--full` selects the larger comparison. The harnesses use deterministic RNG seeds, while elapsed times depend on the machine and system load.
 
-Write evidence under `docs/benchmarks/<game>/<run-id>/`:
+For a recorded study, review the generated output and copy the selected evidence from `target/benchmarks/` into `docs/benchmarks/<game>/<run-id>/`. The protocol calls for:
 
 - `metadata.json`: reviewed code commit, dirty-state flag, UTC timestamp, rustc/Cargo versions, target, OS/CPU/RAM where available, build profile/flags, RNG/lockfile versions, fixture/data hashes, algorithm and data-policy versions, seeds, warm-up/repetition/batch settings, limits and exclusions.
 - `cases.json` or CSV: exact puzzles, boards, word pairs or guess traces used by every competing algorithm. Include generation/configuration IDs, not merely a seed.
