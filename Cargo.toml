@@ -6,5 +6,7 @@ members = [
     "boggle",
     "wordle",
     "word-games-cli",
+    "countdown-timer",
+    "countdown-timer-cli",
 ]
 resolver = "2"

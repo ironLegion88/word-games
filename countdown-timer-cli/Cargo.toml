@@ -1,0 +1,13 @@
+[package]
+name = "countdown-timer-cli"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ashoka University CS"]
+description = "Interactive standalone terminal countdown timer application"
+
+[dependencies]
+countdown-timer = { path = "../countdown-timer" }
+crossterm = "0.29"
+
+[dev-dependencies]
+
