@@ -13,7 +13,7 @@ env:
 
 jobs:
   check:
-    name: Stable Rust on ${{ matrix.os }}
+    name: Rust 1.98.1 on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -21,9 +21,20 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v6
+      # Temporary toolchain pin to Rust 1.98.1:
+      # Unpinned 'stable' in GitHub Actions resolved to Rust 1.100.0, introducing newer Clippy
+      # diagnostics while local development and testing are standardized on Rust 1.98.1.
+      # A coordinated upgrade of both the local environment and CI to the latest stable Rust
+      # is scheduled in docs/PLANNED_IMPROVEMENTS.md.
       - uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: 1.98.1
           components: rustfmt, clippy
+      - name: Print toolchain versions
+        run: |
+          rustc --version
+          cargo --version
+          rustc -vV
       - name: Check formatting
         run: cargo fmt --all -- --check
       - name: Check all targets
