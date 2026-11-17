@@ -132,6 +132,7 @@ Use `--full` for the larger workloads. Spelling Bee prints its summary to the te
 - [Countdown Timer Design Specification](docs/timer/DESIGN_SPEC.md) — monotonic state machine and temporal contracts.
 - [Countdown Timer Implementation Plan](docs/timer/IMPLEMENTATION_PLAN.md) — phase gates, repository layout, and milestones.
 - [Countdown Timer Testing](docs/timer/TESTING.md) — deterministic test matrix, invariants, and evidence record.
+- [Planned Improvements and Roadmap](docs/PLANNED_IMPROVEMENTS.md) — prioritized future enhancements for CI, timers, and games.
 
 ## Project context
 
