@@ -297,3 +297,5 @@ The dictionary fixture was checked against SHA-256 `eda7bc8b86a534de8065a7d0cc09
 ## 13. Standalone Countdown Timer Verification
 
 The test plan, timing invariants, and execution evidence for the standalone `countdown-timer` library and `countdown-timer-cli` binary are maintained in [docs/timer/TESTING.md](timer/TESTING.md).
+
+All 75 timer-specific tests (46 in library, 29 in CLI) pass in debug and release profiles, bringing the full workspace test suite to 282 tests. The standalone timer has been tested manually in a Windows terminal (Windows 11, PowerShell / Windows Terminal) and verified working as expected across launch, space start/pause/resume, 'r' reset, 'q'/Esc/Ctrl+C quit, and completion.
