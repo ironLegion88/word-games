@@ -16,15 +16,15 @@ The one-page *Countdown Timer* assignment requires user-configurable seconds, re
 
 **Definition of done:**
 
-- [ ] New `countdown-timer` crate provides documented, `std`-only, deterministic engine API.
-- [ ] New `countdown-timer-cli` crate provides interactive countdown UI, duration selection, pause/resume, reset, quit, and end notification.
-- [ ] `Cargo.lock` updated correctly and only two new workspace members added.
-- [ ] All boundary, state-machine, clock and formatting tests pass without `sleep()`.
-- [ ] CLI argument tests and pure controller/view tests pass; live TTY checks performed where available.
-- [ ] Workspace formatting, strict Clippy, debug and release tests pass; no game crate modifications.
-- [ ] Existing CI covers the new crates by using `--workspace` (verify, don't assume).
-- [ ] Documentation updated with **actual** verification evidence, commands, OS/Rust versions and limitations.
-- [ ] Work committed in small conventional commits; no push unless separately authorized.
+- [x] New `countdown-timer` crate provides documented, `std`-only, deterministic engine API.
+- [x] New `countdown-timer-cli` crate provides interactive countdown UI, duration selection, pause/resume, reset, quit, and end notification.
+- [x] `Cargo.lock` updated correctly and only two new workspace members added.
+- [x] All boundary, state-machine, clock and formatting tests pass without `sleep()`.
+- [x] CLI argument tests and pure controller/view tests pass; live TTY checks performed where available.
+- [x] Workspace formatting, strict Clippy, debug and release tests pass; no game crate modifications.
+- [x] Existing CI covers the new crates by using `--workspace` (verify, don't assume).
+- [x] Documentation updated with **actual** verification evidence, commands, OS/Rust versions and limitations.
+- [x] Work committed in small conventional commits; no push unless separately authorized.
 
 ## 1. High-level dependency and execution flow
 

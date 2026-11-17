@@ -34,6 +34,29 @@ cargo run --locked -p word-games-cli -- --help
 
 `--color never` gives plain-text feedback. See the [CLI guide](docs/CLI_GUIDE.md) for commands, rules, and replay controls.
 
+## Standalone Countdown Timer
+
+An independent, clock-correct countdown timer engine and interactive terminal application.
+
+```sh
+# Run with explicit duration (seconds between 1 and 86400)
+cargo run --locked -p countdown-timer-cli -- --seconds 180
+
+# Or run with interactive duration prompt
+cargo run --locked -p countdown-timer-cli
+
+# View usage and controls
+cargo run --locked -p countdown-timer-cli -- --help
+```
+
+### Controls
+
+- `Space`: Start, Pause, or Resume countdown
+- `r` / `R`: Reset countdown to configured initial duration
+- `q` / `Q` / `Esc` / `Ctrl+C`: Quit application cleanly
+
+See [Timer Design Specification](docs/timer/DESIGN_SPEC.md), [Implementation Plan](docs/timer/IMPLEMENTATION_PLAN.md), and [Timer Testing](docs/timer/TESTING.md) for architecture, timing invariants, and test records.
+
 ## In the terminal
 
 ![A captured Wordle terminal session using seed 42](docs/assets/wordle-demo.svg)
@@ -58,6 +81,8 @@ The workspace separates the game engines from terminal input and output.
 | [`wordle`](wordle) | Five-letter lexicons, feedback, keyboard state, and round state |
 | [`word-games-cli`](word-games-cli) | Game selection, terminal presentation, and replay |
 | [`trie-cli`](trie-cli) | Interactive dictionary inspection and editing |
+| [`countdown-timer`](countdown-timer) | Reusable deterministic countdown engine, pure snapshots, and one-time expiration |
+| [`countdown-timer-cli`](countdown-timer-cli) | Standalone interactive terminal countdown timer with Crossterm event loop |
 
 The trie owns a `Vec<Node>` arena with typed indices and 26-way child arrays. Deletion prunes unused branches and recycles their slots. Compaction remaps live nodes when fragmentation crosses its threshold. Query cursors borrow the trie, and mutations use `&mut Trie`.
 
@@ -104,6 +129,9 @@ Use `--full` for the larger workloads. Spelling Bee prints its summary to the te
 - [Benchmarks](docs/BENCHMARKS.md) — workloads, output locations, and archived reports.
 - [Wordle answer curation](docs/WORDLE_CURATION_PROVENANCE.md) — vocabulary policy and fixture hashes.
 - [Mastermind reuse map](docs/MASTERMIND_REUSE_MAP.md) — provenance of adapted Wordle components.
+- [Countdown Timer Design Specification](docs/timer/DESIGN_SPEC.md) — monotonic state machine and temporal contracts.
+- [Countdown Timer Implementation Plan](docs/timer/IMPLEMENTATION_PLAN.md) — phase gates, repository layout, and milestones.
+- [Countdown Timer Testing](docs/timer/TESTING.md) — deterministic test matrix, invariants, and evidence record.
 
 ## Project context
 

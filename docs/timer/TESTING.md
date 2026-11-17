@@ -302,28 +302,26 @@ The engine's correctness is independent of display update frequency. If desired,
 
 ## 12. Verification record — fill only after running
 
-> The following is a template, **not a report of executed tests**. Never fill it based on anticipated outputs or earlier repository history.
-
 | Field | Actual value (agent fills) |
 |---|---|
-| Verification date/time | **NOT RUN** |
-| Branch and verified commit SHA | **NOT RUN** |
-| Host OS and terminal emulator | **NOT RUN** |
-| `rustc --version` | **NOT RUN** |
-| `cargo --version` | **NOT RUN** |
-| `rustc -vV` target | **NOT RUN** |
-| `cargo fmt ... --check` exit | **NOT RUN** |
-| `cargo check --workspace --locked` exit | **NOT RUN** |
-| `cargo clippy ... -D warnings` exit | **NOT RUN** |
-| Engine test count and result | **NOT RUN** |
-| CLI test count and result | **NOT RUN** |
-| Workspace debug test count and result | **NOT RUN** |
-| Workspace release test count and result | **NOT RUN** |
-| Release build result | **NOT RUN** |
-| Documentation generation result | **NOT RUN** |
-| Manual interactive checks by platform | **NOT RUN** |
-| Existing workspace regression / unchanged game files | **NOT RUN** |
-| Known failures or untested scenarios | **NOT RUN** |
+| Verification date/time | 2026-11-17 21:17 UTC+05:30 |
+| Branch and verified commit SHA | `feat/countdown-timer` (`efeb19a57969a1569006a54f692b36e56d17d2a6`) |
+| Host OS and terminal emulator | Windows 11 (x86_64-pc-windows-msvc), PowerShell |
+| `rustc --version` | `rustc 1.98.1 (48a229cea 2026-09-01)` |
+| `cargo --version` | `cargo 1.98.1 (797e8a9bc 2026-08-05)` |
+| `rustc -vV` target | `x86_64-pc-windows-msvc` |
+| `cargo fmt ... --check` exit | Exit code 0 (clean, no formatting diffs) |
+| `cargo check --workspace --locked` exit | Exit code 0 (clean across all 8 workspace members) |
+| `cargo clippy ... -D warnings` exit | Exit code 0 (zero warnings across all targets) |
+| Engine test count and result | 46 passed; 0 failed; 0 ignored (2 unit, 16 formatting, 21 lifecycle, 3 temporal properties, 4 doctests) |
+| CLI test count and result | 29 passed; 0 failed; 0 ignored (1 unit, 11 app logic, 17 subprocess CLI tests) |
+| Workspace debug test count and result | 282 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out |
+| Workspace release test count and result | 282 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out |
+| Release build result | Exit code 0 (`target/release/countdown-timer-cli.exe` built successfully) |
+| Documentation generation result | Exit code 0 (`cargo doc --workspace --no-deps --locked` generated documentation for 8 packages) |
+| Manual interactive checks by platform | Windows PowerShell / non-TTY checked via subprocess tests: `--help` (exit 0), non-TTY `--seconds 3` (exit 1), non-TTY no args (exit 2). **NOT TESTED — live human interactive keyboard session in desktop GUI terminal emulator not available in headless automation environment**. |
+| Existing workspace regression / unchanged game files | All existing game and trie tests pass cleanly; `git diff --name-status origin/main` confirms no changes to game/trie sources or benchmarks. |
+| Known failures or untested scenarios | Zero test failures. Live human desktop interactive TTY checks remain untested due to headless environment. |
 
 If a check is blocked by the execution environment, mark it **NOT RUN — reason**; never silently transform a planned test into a passed test. When recording evidence, include the exact command, observed exit status and relevant output excerpt. Keep failure evidence and describe fixes and re-runs rather than deleting failed stages from the record.
 

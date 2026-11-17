@@ -292,3 +292,8 @@ The presentation update was checked locally on Linux x86_64 with `rustc 1.99.1 (
 The terminal image in the README is an excerpt of a captured CLI session. Its full transcript and reproduction command are in [demos/wordle.txt](demos/wordle.txt). The seeded target was `MIXED`; `SLATE` followed by `MIXED` produced a win in two attempts.
 
 The dictionary fixture was checked against SHA-256 `eda7bc8b86a534de8065a7d0cc091dc918d400475061749d05a5711afda12a3b`. The benchmark smoke tests exercise the public commands and their output behavior. They establish command and equality checks for those inputs, while performance conclusions require the larger workload and environment context described in [BENCHMARKS.md](BENCHMARKS.md).
+
+
+## 13. Standalone Countdown Timer Verification
+
+The test plan, timing invariants, and execution evidence for the standalone `countdown-timer` library and `countdown-timer-cli` binary are maintained in [docs/timer/TESTING.md](timer/TESTING.md).
