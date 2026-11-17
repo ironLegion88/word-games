@@ -1,7 +1,7 @@
 # Planned Improvements and Roadmap
 
-**Status:** Approved Roadmap & Technical Backlog  
-**Target Repository:** [`ironLegion88/word-games`](https://github.com/ironLegion88/word-games)  
+**Status:** Approved Roadmap & Technical Backlog
+**Target Repository:** [`ironLegion88/word-games`](https://github.com/ironLegion88/word-games)
 **Scope Firewall:** This document records future enhancements only. **None** of the features below are implemented in the current milestone, ensuring the stability and boundaries of the existing crates and verified test suites.
 
 ---

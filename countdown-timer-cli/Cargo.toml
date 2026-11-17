@@ -10,4 +10,3 @@ countdown-timer = { path = "../countdown-timer" }
 crossterm = "0.29"
 
 [dev-dependencies]
-

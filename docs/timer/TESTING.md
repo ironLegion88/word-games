@@ -1,8 +1,8 @@
 # Countdown Timer — Testing, Invariants and Verification Protocol
 
 **Status:** **IMPLEMENTED AND VERIFIED** — 75 timer tests passed (282 workspace tests total).
-**Scope:** `countdown-timer` engine and `countdown-timer-cli` standalone application.  
-**Specification:** [`DESIGN_SPEC.md`](DESIGN_SPEC.md)  
+**Scope:** `countdown-timer` engine and `countdown-timer-cli` standalone application.
+**Specification:** [`DESIGN_SPEC.md`](DESIGN_SPEC.md)
 **Execution plan:** [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md)
 
 > **Evidence integrity record:** All scenarios and invariants in this file are implemented and verified. Test names, command exit codes, test counts, versions, OS, commit and dates are recorded from actual command outputs. Historical repository test totals are preserved in the existing root `docs/TESTING.md`.

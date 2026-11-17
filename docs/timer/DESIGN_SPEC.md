@@ -1,9 +1,9 @@
 # Countdown Timer — Design Specification
 
 **Status:** Implemented and verified architecture
-**Scope:** Reusable Rust countdown **engine** and independent **standalone terminal application** only  
-**Target repository:** [`ironLegion88/word-games`](https://github.com/ironLegion88/word-games)  
-**Related documents:** [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md), [`TESTING.md`](TESTING.md), [`../../prompts/TIMER_AGENT_PROMPT.md`](../../prompts/TIMER_AGENT_PROMPT.md)  
+**Scope:** Reusable Rust countdown **engine** and independent **standalone terminal application** only
+**Target repository:** [`ironLegion88/word-games`](https://github.com/ironLegion88/word-games)
+**Related documents:** [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md), [`TESTING.md`](TESTING.md), [`../../prompts/TIMER_AGENT_PROMPT.md`](../../prompts/TIMER_AGENT_PROMPT.md)
 **Source assignment:** [`../../assignments/Countdown-timers.pdf`](../../assignments/Countdown-timers.pdf). The assignment requires a configurable countdown in seconds based on the system clock, start/pause/resume, a visible countdown to zero and completion indication; original-duration display is suggested. Concurrent and sequential timers and 100-ms updates are extensions, not this phase.
 
 > **Scope firewall:** Do not change `trie`, `trie-cli`, `spelling-bee`, `boggle`, `wordle`, `word-games-cli`, their tests, benchmark algorithms, or their behavior. Do not integrate timers into games. Do not build future GUI, concurrent-timer, sequence, sound, or async infrastructure. The core must be reusable later without depending on game types.

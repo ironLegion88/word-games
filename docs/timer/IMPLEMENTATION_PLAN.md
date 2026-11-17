@@ -1,9 +1,9 @@
 # Countdown Timer — Implementation Plan
 
 **Status:** **IMPLEMENTED AND VERIFIED**. All phase gates P0 through P9 complete and verified.
-**Repository:** https://github.com/ironLegion88/word-games  
-**Binding technical specification:** [`DESIGN_SPEC.md`](DESIGN_SPEC.md)  
-**Binding test protocol:** [`TESTING.md`](TESTING.md)  
+**Repository:** https://github.com/ironLegion88/word-games
+**Binding technical specification:** [`DESIGN_SPEC.md`](DESIGN_SPEC.md)
+**Binding test protocol:** [`TESTING.md`](TESTING.md)
 **Coding-agent instructions:** [`../../prompts/TIMER_AGENT_PROMPT.md`](../../prompts/TIMER_AGENT_PROMPT.md)
 
 > **Current assignment only:** Implement the reusable Rust countdown library and one standalone terminal application. **Never implement or integrate with** `spelling-bee`, `boggle`, `wordle`, `word-games-cli`, `trie` or `trie-cli`. Existing game code and benchmarks remain unchanged. Do not implement optional concurrency, sequences, audio, persistence, GUI, or 100-ms countdown display.
